@@ -47,7 +47,7 @@ export default function CustomerList({
             )}
 
             {customers.map((c, i) => (
-              <TableRow key={i} hover>
+              <TableRow key={c._id} hover>
                 <TableCell>{i + 1}</TableCell>
                 <TableCell>{c.name}</TableCell>
                 <TableCell>{c.mobile}</TableCell>
@@ -55,13 +55,14 @@ export default function CustomerList({
                 <TableCell>{c.gst || "-"}</TableCell>
                 <TableCell>{c.state || "-"}</TableCell>
                 <TableCell align="right">
-                  <Button size="small" onClick={() => onEdit(i)}>
+                  <Button size="small" onClick={() => onEdit(c)}>
                     Edit
                   </Button>
+
                   <Button
                     size="small"
                     color="error"
-                    onClick={() => onDelete(i)}
+                    onClick={() => onDelete(c)}
                   >
                     Delete
                   </Button>
