@@ -1,9 +1,8 @@
 import { useEffect, useState } from "react";
 import { Stack } from "@mui/material";
+import axios from "axios";
 import CustomerForm from "../../Component/Customer/CustomerForm";
 import CustomerList from "../../Component/Customer/CustomerList";
-
-const STORAGE_KEY = "customers";
 
 const emptyForm = {
   name: "",
@@ -15,50 +14,70 @@ const emptyForm = {
 };
 
 export default function CustomerModule() {
-  // ✅ SAFE INITIALIZATION (NO DATA LOSS)
-  const [customers, setCustomers] = useState(() => {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    return stored ? JSON.parse(stored) : [];
-  });
-
+  const [customers, setCustomers] = useState([]);
   const [form, setForm] = useState(emptyForm);
-  const [editIndex, setEditIndex] = useState(null);
+  const [editId, setEditId] = useState(null);
 
-  // 💾 SAVE TO localStorage (ONLY AFTER INIT)
+  // ✅ Fetch Customers From Backend
+  const fetchCustomers = async () => {
+    try {
+      const res = await axios.get("http://localhost:5000/api/customers");
+      setCustomers(res.data);
+    } catch (error) {
+      console.error("Error fetching customers", error);
+    }
+  };
+
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(customers));
-  }, [customers]);
+    fetchCustomers();
+  }, []);
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!form.name || !form.mobile) {
       alert("Customer name and mobile are required");
       return;
     }
 
-    if (editIndex !== null) {
-      const updated = [...customers];
-      updated[editIndex] = form;
-      setCustomers(updated);
-      setEditIndex(null);
-    } else {
-      setCustomers([...customers, form]);
+    try {
+      if (editId) {
+        await axios.put(
+          `http://localhost:5000/api/customers/${editId}`,
+          form
+        );
+        setEditId(null);
+      } else {
+        await axios.post(
+          "http://localhost:5000/api/customers",
+          form
+        );
+      }
+
+      setForm(emptyForm);
+      fetchCustomers(); // refresh list
+    } catch (error) {
+      console.error("Error saving customer", error);
     }
-
-    setForm(emptyForm);
   };
 
-  const handleEdit = (index) => {
-    setForm(customers[index]);
-    setEditIndex(index);
+  const handleEdit = (customer) => {
+    setForm(customer);
+    setEditId(customer._id);
   };
 
-  const handleDelete = (index) => {
+  const handleDelete = async (customer) => {
     if (window.confirm("Delete this customer?")) {
-      setCustomers(customers.filter((_, i) => i !== index));
+      try {
+        await axios.delete(
+          `http://localhost:5000/api/customers/${customer._id}`
+        );
+        fetchCustomers();
+      } catch (error) {
+        console.error("Error deleting customer", error);
+      }
     }
   };
 
@@ -68,7 +87,7 @@ export default function CustomerModule() {
         form={form}
         onChange={handleChange}
         onSubmit={handleSubmit}
-        isEdit={editIndex !== null}
+        isEdit={!!editId}
       />
 
       <CustomerList
