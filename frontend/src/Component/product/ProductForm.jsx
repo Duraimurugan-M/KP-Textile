@@ -48,13 +48,13 @@ export default function ProductForm({ addProduct }) {
   const handleSubmit = (e) => {
     e.preventDefault();
 
- const validRows = rows.filter(
-  (row) => row.name && row.productCode && row.hsnCode
-);
+    const validRows = rows.filter(
+      (row) => row.name && row.productCode && row.hsnCode
+    );
 
-if (validRows.length === 0) return;
+    if (validRows.length === 0) return;
 
-addProduct(validRows);
+    addProduct(validRows);
 
 
     setRows([emptyRow()]);
@@ -90,12 +90,12 @@ addProduct(validRows);
 
             <Grid item xs={12} md={2}>
               <TextField
-  label="Category"
-  name="category"
-  sx={{ width: 200 }}
-  value={row.category}
-  onChange={(e) => handleChange(index, e)}
-/>
+                label="Category"
+                name="category"
+                sx={{ width: 200 }}
+                value={row.category}
+                onChange={(e) => handleChange(index, e)}
+              />
 
             </Grid>
 
@@ -152,24 +152,24 @@ addProduct(validRows);
             </Grid>
 
             <Grid item xs={12} md={2}>
-  <TextField
-    label="HSN Code"
-    name="hsnCode"
-    sx={{ width: 200 }}
-    value={row.hsnCode}
-    onChange={(e) => handleChange(index, e)}
-  />
-</Grid>
+              <TextField
+                label="HSN Code"
+                name="hsnCode"
+                sx={{ width: 200 }}
+                value={row.hsnCode}
+                onChange={(e) => handleChange(index, e)}
+              />
+            </Grid>
 
-<Grid item xs={12}>
-  <TextField
-    fullWidth
-    label="Description"
-    name="description"
-    value={row.description}
-    onChange={(e) => handleChange(index, e)}
-  />
-</Grid>
+            <Grid item xs={12}>
+              <TextField
+                fullWidth
+                label="Description"
+                name="description"
+                value={row.description}
+                onChange={(e) => handleChange(index, e)}
+              />
+            </Grid>
 
 
             <Grid item xs={12} md={0.5}>

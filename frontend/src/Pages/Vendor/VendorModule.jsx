@@ -1,9 +1,8 @@
 import { useEffect, useState } from "react";
 import { Stack } from "@mui/material";
+import customFetch from "../../utils/customFetch";
 import VendorForm from "../../Component/Vendor/VendorForm";
 import VendorList from "../../Component/Vendor/VendorList";
-
-const STORAGE_KEY = "vendors";
 
 const emptyForm = {
   name: "",
@@ -15,50 +14,75 @@ const emptyForm = {
 };
 
 export default function VendorModule() {
-  // ✅ SAFE INITIALIZATION
-  const [vendors, setVendors] = useState(() => {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    return stored ? JSON.parse(stored) : [];
-  });
-
+  const [vendors, setVendors] = useState([]);
   const [form, setForm] = useState(emptyForm);
-  const [editIndex, setEditIndex] = useState(null);
+  const [editId, setEditId] = useState(null);
 
-  // 💾 SAVE ONLY WHEN vendors CHANGE
+  // ✅ GET ALL (getVendors controller)
+  const fetchVendors = async () => {
+    try {
+      const { data } = await customFetch.get("vendors");
+      setVendors(data);
+    } catch (error) {
+      console.error(error.response?.data || error.message);
+    }
+  };
+
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(vendors));
-  }, [vendors]);
+    fetchVendors();
+  }, []);
 
+  // ✅ INPUT CHANGE
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = () => {
+  // ✅ CREATE OR UPDATE
+  const handleSubmit = async () => {
     if (!form.name || !form.mobile) {
       alert("Vendor name and mobile are required");
       return;
     }
 
-    if (editIndex !== null) {
-      const updated = [...vendors];
-      updated[editIndex] = form;
-      setVendors(updated);
-      setEditIndex(null);
-    } else {
-      setVendors([...vendors, form]);
+    try {
+      if (editId) {
+        // 🔹 CALLS updateVendor controller
+        await customFetch.put(`vendors/${editId}`, form);
+      } else {
+        // 🔹 CALLS createVendor controller
+        await customFetch.post("vendors", form);
+      }
+
+      setForm(emptyForm);
+      setEditId(null);
+      fetchVendors();
+    } catch (error) {
+      console.error(error.response?.data || error.message);
     }
-
-    setForm(emptyForm);
   };
 
-  const handleEdit = (index) => {
-    setForm(vendors[index]);
-    setEditIndex(index);
+  // ✅ EDIT (only sets state, no backend call here)
+  const handleEdit = (vendor) => {
+    setForm({
+      name: vendor.name || "",
+      mobile: vendor.mobile || "",
+      email: vendor.email || "",
+      gst: vendor.gst || "",
+      state: vendor.state || "",
+      address: vendor.address || "",
+    });
+    setEditId(vendor._id);
   };
 
-  const handleDelete = (index) => {
+  // ✅ DELETE (calls deleteVendor controller)
+  const handleDelete = async (id) => {
     if (window.confirm("Delete this vendor?")) {
-      setVendors(vendors.filter((_, i) => i !== index));
+      try {
+        await customFetch.delete(`vendors/${id}`);
+        fetchVendors();
+      } catch (error) {
+        console.error(error.response?.data || error.message);
+      }
     }
   };
 
@@ -68,7 +92,7 @@ export default function VendorModule() {
         form={form}
         onChange={handleChange}
         onSubmit={handleSubmit}
-        isEdit={editIndex !== null}
+        isEdit={!!editId}
       />
 
       <VendorList

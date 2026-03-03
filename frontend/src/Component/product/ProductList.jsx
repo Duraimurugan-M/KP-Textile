@@ -1,224 +1,97 @@
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableRow,
-  Button,
-  Chip,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  TextField,
-  DialogActions,
-  TableContainer,
-  Paper,
-  MenuItem,
   Grid,
+  TextField,
+  Button,
+  Paper,
+  Typography,
 } from "@mui/material";
-import { useState } from "react";
 
-export default function ProductList({
-  products,
-  deleteProduct,
-  updateProduct,
+export default function VendorForm({
+  form,
+  onChange,
+  onSubmit,
+  isEdit,
 }) {
-  const [open, setOpen] = useState(false);
-  const [edit, setEdit] = useState(null);
-
-  // 🔥 Open edit dialog
-  const handleEdit = (product) => {
-    setEdit({ ...product }); // clone object
-    setOpen(true);
-  };
-
-  // 🔥 Save edit
-  const save = () => {
-    updateProduct({ ...edit });
-    setOpen(false);
-  };
-
   return (
-    <>
-      <TableContainer component={Paper} sx={{ overflowX: "auto" }}>
-        <Table size="small">
-          <TableHead>
-  <TableRow>
-    <TableCell>Name</TableCell>
-    <TableCell>Category</TableCell>
-    <TableCell>Fabric</TableCell>
-    <TableCell>Color</TableCell>
-    <TableCell>HSN</TableCell>
-    <TableCell>Price</TableCell>
-    <TableCell>Stock</TableCell>
-    <TableCell>Status</TableCell>
-    <TableCell>Product Code</TableCell>
-    <TableCell>Actions</TableCell>
-  </TableRow>
-</TableHead>
+    <Paper sx={{ p: 3 }}>
+      <Typography variant="h6" mb={2}>
+        {isEdit ? "Edit Vendor" : "Add Vendor"}
+      </Typography>
 
+      <Grid container spacing={2}>
+        <Grid size={{ xs: 12, md: 6 }}>
+          <TextField
+            fullWidth
+            label="Vendor Name"
+            name="name"
+            value={form.name || ""}
+            onChange={onChange}
+            required
+          />
+        </Grid>
 
-          <TableBody>
-            {products.map((p) => (
-              <TableRow key={p._id}>
-  <TableCell>{p.name}</TableCell>
-  <TableCell>{p.category}</TableCell>
-  <TableCell>{p.fabric}</TableCell>
-  <TableCell>{p.color}</TableCell>
-  <TableCell>{p.hsnCode}</TableCell>
-  <TableCell>₹{p.price}</TableCell>
-  <TableCell>{p.stock}</TableCell>
+        <Grid size={{ xs: 12, md: 6 }}>
+          <TextField
+            fullWidth
+            label="Mobile Number"
+            name="mobile"
+            value={form.mobile || ""}
+            onChange={onChange}
+            required
+          />
+        </Grid>
 
-  <TableCell>
-    <Chip
-      label={
-        p.stock === 0 ? "Out" : p.stock < 5 ? "Low" : "In Stock"
-      }
-      color={
-        p.stock === 0
-          ? "error"
-          : p.stock < 5
-          ? "warning"
-          : "success"
-      }
-    />
-  </TableCell>
+        <Grid size={{ xs: 12, md: 6 }}>
+          <TextField
+            fullWidth
+            label="Email"
+            name="email"
+            value={form.email || ""}
+            onChange={onChange}
+          />
+        </Grid>
 
-  <TableCell>{p.productCode}</TableCell>
+        <Grid size={{ xs: 12, md: 6 }}>
+          <TextField
+            fullWidth
+            label="GST Number"
+            name="gst"
+            value={form.gst || ""}
+            onChange={onChange}
+          />
+        </Grid>
 
-  <TableCell>
-    <Button onClick={() => handleEdit(p)}>Edit</Button>
-    <Button color="error" onClick={() => deleteProduct(p._id)}>
-      Delete
-    </Button>
-  </TableCell>
-</TableRow>
+        <Grid size={{ xs: 12, md: 6 }}>
+          <TextField
+            fullWidth
+            label="State"
+            name="state"
+            value={form.state || ""}
+            onChange={onChange}
+          />
+        </Grid>
 
-            ))}
-          </TableBody>
-        </Table>
-      </TableContainer>
+        <Grid size={{ xs: 12 }}>
+          <TextField
+            fullWidth
+            multiline
+            rows={2}
+            label="Address"
+            name="address"
+            value={form.address || ""}
+            onChange={onChange}
+          />
+        </Grid>
 
-      {/* 🔥 FULL EDIT DIALOG */}
-      {edit && (
-        <Dialog open={open} onClose={() => setOpen(false)} maxWidth="md">
-          <DialogTitle>Edit Product</DialogTitle>
-
-          <DialogContent>
-            <Grid container spacing={2} sx={{ mt: 1 }}>
-              <Grid item xs={12} md={6}>
-                <TextField
-                  sx={{ width: 200 }}
-                  label="Name"
-                  value={edit.name}
-                  onChange={(e) => setEdit({ ...edit, name: e.target.value })}
-                />
-              </Grid>
-
-              <Grid item xs={12} md={6}>
-                <TextField
-  sx={{ width: 200 }}
-  label="Category"
-  value={edit.category}
-  onChange={(e) =>
-    setEdit({ ...edit, category: e.target.value })
-  }
-/>
-
-              </Grid>
-
-              <Grid item xs={12} md={6}>
-                <TextField
-                  sx={{ width: 200 }}
-                  label="Fabric"
-                  value={edit.fabric}
-                  onChange={(e) => setEdit({ ...edit, fabric: e.target.value })}
-                />
-              </Grid>
-
-              <Grid item xs={12} md={6}>
-                <TextField
-                  sx={{ width: 200 }}
-                  label="Color"
-                  value={edit.color}
-                  onChange={(e) => setEdit({ ...edit, color: e.target.value })}
-                />
-              </Grid>
-
-              <Grid item xs={12} md={6}>
-                <TextField
-                  sx={{ width: 200 }}
-                  type="number"
-                  label="Price"
-                  value={edit.price}
-                  onChange={(e) =>
-                    setEdit({
-                      ...edit,
-                      price: Number(e.target.value),
-                    })
-                  }
-                />
-              </Grid>
-
-              <Grid item xs={12} md={6}>
-                <TextField
-                  sx={{ width: 200 }}
-                  type="number"
-                  label="Stock"
-                  value={edit.stock}
-                  onChange={(e) =>
-                    setEdit({
-                      ...edit,
-                      stock: Number(e.target.value),
-                    })
-                  }
-                />
-              </Grid>
-
-             <Grid item xs={12} md={6}>
-  <TextField
-    sx={{ width: 200 }}
-    label="Product Code"
-    value={edit.productCode}
-    onChange={(e) =>
-      setEdit({ ...edit, productCode: e.target.value })
-    }
-  />
-</Grid>
-
-<Grid item xs={12} md={6}>
-  <TextField
-    sx={{ width: 200 }}
-    label="HSN Code"
-    value={edit.hsnCode}
-    onChange={(e) =>
-      setEdit({ ...edit, hsnCode: e.target.value })
-    }
-  />
-</Grid>
-
-<Grid item xs={12}>
-  <TextField
-    fullWidth
-    label="Description"
-    value={edit.description}
-    onChange={(e) =>
-      setEdit({ ...edit, description: e.target.value })
-    }
-  />
-</Grid>
-
-            </Grid>
-          </DialogContent>
-
-          <DialogActions>
-            <Button onClick={() => setOpen(false)}>Cancel</Button>
-            <Button variant="contained" onClick={save}>
-              Save
-            </Button>
-          </DialogActions>
-        </Dialog>
-      )}
-    </>
+        <Grid size={{ xs: 12 }} textAlign="right">
+          <Button
+            variant="contained"
+            onClick={onSubmit}
+          >
+            {isEdit ? "Update Vendor" : "Add Vendor"}
+          </Button>
+        </Grid>
+      </Grid>
+    </Paper>
   );
 }
