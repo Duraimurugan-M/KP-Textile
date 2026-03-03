@@ -1,12 +1,13 @@
 import {
+  Paper,
+  Typography,
   Table,
   TableHead,
   TableRow,
   TableCell,
   TableBody,
-  Button,
-  Paper,
   TableContainer,
+  Button,
 } from "@mui/material";
 
 export default function VendorList({
@@ -15,40 +16,54 @@ export default function VendorList({
   onDelete,
 }) {
   return (
-    <Paper>
+    <Paper sx={{ p: 3 }}>
+      <Typography variant="h6" mb={2}>
+        Vendor List
+      </Typography>
+
       <TableContainer sx={{ overflowX: "auto" }}>
-        <Table>
+        <Table size="small" sx={{ minWidth: 750 }}>
           <TableHead>
             <TableRow>
-              <TableCell>Name</TableCell>
-              <TableCell>Mobile</TableCell>
-              <TableCell>Email</TableCell>
-              <TableCell>GST</TableCell>
-              <TableCell>State</TableCell>
-              <TableCell>Actions</TableCell>
+              <TableCell sx={{ fontWeight: "bold" }}>#</TableCell>
+              <TableCell sx={{ fontWeight: "bold" }}>Name</TableCell>
+              <TableCell sx={{ fontWeight: "bold" }}>Mobile</TableCell>
+              <TableCell sx={{ fontWeight: "bold" }}>Email</TableCell>
+              <TableCell sx={{ fontWeight: "bold" }}>GST</TableCell>
+              <TableCell sx={{ fontWeight: "bold" }}>State</TableCell>
+              <TableCell sx={{ fontWeight: "bold" }} align="right">
+                Actions
+              </TableCell>
             </TableRow>
           </TableHead>
 
           <TableBody>
-            {vendors.map((vendor) => (
-              <TableRow key={vendor._id}>
+            {vendors.length === 0 && (
+              <TableRow>
+                <TableCell colSpan={7} align="center">
+                  No vendors added
+                </TableCell>
+              </TableRow>
+            )}
+
+            {vendors.map((vendor, i) => (
+              <TableRow key={vendor._id} hover>
+                <TableCell>{i + 1}</TableCell>
                 <TableCell>{vendor.name}</TableCell>
                 <TableCell>{vendor.mobile}</TableCell>
-                <TableCell>{vendor.email}</TableCell>
-                <TableCell>{vendor.gst}</TableCell>
-                <TableCell>{vendor.state}</TableCell>
-
-                <TableCell>
+                <TableCell>{vendor.email || "-"}</TableCell>
+                <TableCell>{vendor.gst || "-"}</TableCell>
+                <TableCell>{vendor.state || "-"}</TableCell>
+                <TableCell align="right">
                   <Button
-                    variant="outlined"
+                    size="small"
                     onClick={() => onEdit(vendor)}
-                    sx={{ mr: 1 }}
                   >
                     Edit
                   </Button>
 
                   <Button
-                    variant="contained"
+                    size="small"
                     color="error"
                     onClick={() => onDelete(vendor._id)}
                   >
