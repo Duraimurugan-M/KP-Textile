@@ -2,10 +2,15 @@ import { useEffect, useState } from "react";
 import { Stack } from "@mui/material";
 import { toast } from "react-toastify";
 
-import customFetch from "../../utils/customFetch";
-
 import CustomerForm from "../../Component/Customer/CustomerForm";
 import CustomerList from "../../Component/Customer/CustomerList";
+
+import {
+  getCustomers,
+  createCustomer,
+  updateCustomer,
+  deleteCustomer,
+} from "../../api/customerApi";
 
 const emptyForm = {
   name: "",
@@ -21,18 +26,32 @@ export default function CustomerModule() {
   const [form, setForm] = useState(emptyForm);
   const [editId, setEditId] = useState(null);
 
+  // ✅ Query states (same as vendor)
+  const [page, setPage] = useState(1);
+  const [limit] = useState(10);
+  const [search, setSearch] = useState("");
+  const [sort, setSort] = useState("");
+  const [total, setTotal] = useState(0);
+
   const fetchCustomers = async () => {
     try {
-      const res = await customFetch.get("/customers");
-      setCustomers(res.data);
+      const { data } = await getCustomers({
+        page,
+        limit,
+        search,
+        sort,
+      });
+
+      setCustomers(data.customers || []);
+      setTotal(data.total || 0);
     } catch (error) {
-      toast.error("Failed to load customers");
+      toast.error(error.response?.data?.message || "Error fetching customers");
     }
   };
 
   useEffect(() => {
     fetchCustomers();
-  }, []);
+  }, [page, search, sort]);
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -46,27 +65,18 @@ export default function CustomerModule() {
 
     try {
       if (editId) {
-        await customFetch.put(`/customers/${editId}`, form);
-
+        await updateCustomer(editId, form);
         toast.success("Customer updated successfully");
-        setEditId(null);
       } else {
-        await customFetch.post("/customers", form);
-
+        await createCustomer(form);
         toast.success("Customer added successfully");
       }
 
       setForm(emptyForm);
+      setEditId(null);
       fetchCustomers();
-
     } catch (error) {
-
-      if (error.response?.data?.message) {
-        toast.error(error.response.data.message);
-      } else {
-        toast.error("Something went wrong");
-      }
-
+      toast.error(error.response?.data?.message || "Something went wrong");
     }
   };
 
@@ -75,16 +85,14 @@ export default function CustomerModule() {
     setEditId(customer._id);
   };
 
-  const handleDelete = async (customer) => {
+  const handleDelete = async (id) => {
     if (window.confirm("Delete this customer?")) {
       try {
-        await customFetch.delete(`/customers/${customer._id}`);
-
+        await deleteCustomer(id);
         toast.success("Customer deleted successfully");
         fetchCustomers();
-
       } catch (error) {
-        toast.error("Delete failed");
+        toast.error(error.response?.data?.message || "Delete failed");
       }
     }
   };
@@ -106,6 +114,14 @@ export default function CustomerModule() {
 
       <CustomerList
         customers={customers}
+        search={search}
+        setSearch={setSearch}
+        sort={sort}
+        setSort={setSort}
+        page={page}
+        setPage={setPage}
+        limit={limit}
+        total={total}
         onEdit={handleEdit}
         onDelete={handleDelete}
       />

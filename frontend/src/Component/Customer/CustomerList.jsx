@@ -8,32 +8,74 @@ import {
   TableBody,
   TableContainer,
   Button,
+  Stack,
+  TextField,
 } from "@mui/material";
 
 export default function CustomerList({
   customers,
+  search,
+  setSearch,
+  sort,
+  setSort,
+  page,
+  setPage,
+  limit,
+  total,
   onEdit,
   onDelete,
 }) {
   return (
     <Paper sx={{ p: 3 }}>
-      <Typography variant="h6" mb={2}>
-        Customer List
-      </Typography>
+      {/* 🔥 Header + Search + Sort */}
+      <Stack
+        direction="row"
+        spacing={2}
+        justifyContent="space-between"
+        mb={2}
+      >
+        <Typography variant="h6">
+          Customer List
+        </Typography>
 
-      <TableContainer sx={{ overflowX: "auto" }}>
-        <Table size="small" sx={{ minWidth: 750 }}>
+        <Stack direction="row" spacing={2}>
+          <TextField
+            size="small"
+            placeholder="Search"
+            value={search}
+            onChange={(e) => {
+              setPage(1);
+              setSearch(e.target.value);
+            }}
+          />
+
+          <TextField
+            select
+            size="small"
+            value={sort}
+            onChange={(e) => setSort(e.target.value)}
+            SelectProps={{ native: true }}
+          >
+            <option value="">None</option>
+            <option value="name">Name A-Z</option>
+            <option value="-name">Name Z-A</option>
+            <option value="-createdAt">Newest</option>
+            <option value="createdAt">Oldest</option>
+          </TextField>
+        </Stack>
+      </Stack>
+
+      <TableContainer>
+        <Table size="small">
           <TableHead>
             <TableRow>
-              <TableCell sx={{ fontWeight: "bold" }}>#</TableCell>
-              <TableCell sx={{ fontWeight: "bold" }}>Name</TableCell>
-              <TableCell sx={{ fontWeight: "bold" }}>Mobile</TableCell>
-              <TableCell sx={{ fontWeight: "bold" }}>Email</TableCell>
-              <TableCell sx={{ fontWeight: "bold" }}>GST</TableCell>
-              <TableCell sx={{ fontWeight: "bold" }}>State</TableCell>
-              <TableCell sx={{ fontWeight: "bold" }} align="right">
-                Actions
-              </TableCell>
+              <TableCell>#</TableCell>
+              <TableCell>Name</TableCell>
+              <TableCell>Mobile</TableCell>
+              <TableCell>Email</TableCell>
+              <TableCell>GST</TableCell>
+              <TableCell>State</TableCell>
+              <TableCell align="right">Actions</TableCell>
             </TableRow>
           </TableHead>
 
@@ -41,14 +83,14 @@ export default function CustomerList({
             {customers.length === 0 && (
               <TableRow>
                 <TableCell colSpan={7} align="center">
-                  No customers added
+                  No customers found
                 </TableCell>
               </TableRow>
             )}
 
             {customers.map((c, i) => (
-              <TableRow key={c._id} hover>
-                <TableCell>{i + 1}</TableCell>
+              <TableRow key={c._id}>
+                <TableCell>{(page - 1) * limit + i + 1}</TableCell>
                 <TableCell>{c.name}</TableCell>
                 <TableCell>{c.mobile}</TableCell>
                 <TableCell>{c.email || "-"}</TableCell>
@@ -58,11 +100,10 @@ export default function CustomerList({
                   <Button size="small" onClick={() => onEdit(c)}>
                     Edit
                   </Button>
-
                   <Button
                     size="small"
                     color="error"
-                    onClick={() => onDelete(c)}
+                    onClick={() => onDelete(c._id)}
                   >
                     Delete
                   </Button>
@@ -72,6 +113,32 @@ export default function CustomerList({
           </TableBody>
         </Table>
       </TableContainer>
+
+      {/* 🔥 Pagination bottom right */}
+      <Stack
+        direction="row"
+        spacing={2}
+        justifyContent="flex-end"
+        mt={2}
+      >
+        <Button
+          disabled={page === 1}
+          onClick={() => setPage(page - 1)}
+        >
+          Prev
+        </Button>
+
+        <Typography>
+          Page {page}
+        </Typography>
+
+        <Button
+          disabled={page * limit >= total}
+          onClick={() => setPage(page + 1)}
+        >
+          Next
+        </Button>
+      </Stack>
     </Paper>
   );
 }
