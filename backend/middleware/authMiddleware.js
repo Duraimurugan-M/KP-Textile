@@ -1,18 +1,33 @@
-import { verifyTokenSafe } from "../utils/tokenutils.js";
-
-
+import jwt from "jsonwebtoken";
 
 export const authGuard = (req, res, next) => {
-  const token = req.cookies.token;
-
-  if (!token) {
-    return res.status(401).json({ message: "Unauthorized" });
-  }
-
   try {
-    req.user = verifyTokenSafe(token);
-    next(); // ✅ ONLY place next() is used
-  } catch {
-    return res.status(401).json({ message: "Invalid token" });
+
+    const token =
+      req.cookies?.token ||
+      req.headers.authorization?.split(" ")[1];
+
+    if (!token) {
+      return res.status(401).json({
+        success: false,
+        msg: "Not authorized"
+      });
+    }
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+    req.user = {
+      userId: decoded.userId
+    };
+
+    next();
+
+  } catch (error) {
+
+    return res.status(401).json({
+      success: false,
+      msg: "Invalid token"
+    });
+
   }
 };

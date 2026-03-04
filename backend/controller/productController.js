@@ -1,5 +1,6 @@
 import Product from "../model/Product.js";
 import XLSX from "xlsx";
+
 /* ================= CREATE PRODUCT ================= */
 export const createProduct = async (req, res) => {
   try {
@@ -15,7 +16,6 @@ export const createProduct = async (req, res) => {
       description,
     } = req.body;
 
-    // 🔎 Inline Validation
     if (!name || !productCode || !hsnCode || !category || price === undefined) {
       return res.status(400).json({
         success: false,
@@ -37,12 +37,12 @@ export const createProduct = async (req, res) => {
       });
     }
 
-    // Check duplicate productCode
     const existing = await Product.findOne({ productCode });
+
     if (existing) {
       return res.status(400).json({
         success: false,
-        msg: "Product Code already exists",
+        msg: "Product code already exists",
       });
     }
 
@@ -56,7 +56,6 @@ export const createProduct = async (req, res) => {
       price,
       stock,
       description,
-      createdBy: req.user?.userId,
     });
 
     res.status(201).json({
@@ -65,6 +64,14 @@ export const createProduct = async (req, res) => {
     });
 
   } catch (error) {
+
+    if (error.code === 11000) {
+      return res.status(400).json({
+        success: false,
+        msg: "Duplicate product code",
+      });
+    }
+
     res.status(500).json({
       success: false,
       msg: error.message,
@@ -72,24 +79,33 @@ export const createProduct = async (req, res) => {
   }
 };
 
+
 /* ================= GET ALL PRODUCTS ================= */
 export const getAllProducts = async (req, res) => {
   try {
-    const products = await Product.find().sort("-createdAt");
+
+    const products = await Product.find().sort({ createdAt: -1 });
 
     res.status(200).json({
       success: true,
       count: products.length,
       products,
     });
+
   } catch (error) {
-    res.status(500).json({ success: false, msg: error.message });
+
+    res.status(500).json({
+      success: false,
+      msg: error.message,
+    });
   }
 };
+
 
 /* ================= GET SINGLE PRODUCT ================= */
 export const getProduct = async (req, res) => {
   try {
+
     const { id } = req.params;
 
     const product = await Product.findById(id);
@@ -107,23 +123,20 @@ export const getProduct = async (req, res) => {
     });
 
   } catch (error) {
-    res.status(500).json({ success: false, msg: error.message });
+
+    res.status(500).json({
+      success: false,
+      msg: error.message,
+    });
   }
 };
+
 
 /* ================= UPDATE PRODUCT ================= */
 export const updateProduct = async (req, res) => {
   try {
+
     const { id } = req.params;
-
-    const product = await Product.findById(id);
-
-    if (!product) {
-      return res.status(404).json({
-        success: false,
-        msg: "Product not found",
-      });
-    }
 
     if (req.body.price !== undefined && req.body.price < 0) {
       return res.status(400).json({
@@ -139,7 +152,7 @@ export const updateProduct = async (req, res) => {
       });
     }
 
-    const updatedProduct = await Product.findByIdAndUpdate(
+    const product = await Product.findByIdAndUpdate(
       id,
       req.body,
       {
@@ -148,22 +161,35 @@ export const updateProduct = async (req, res) => {
       }
     );
 
+    if (!product) {
+      return res.status(404).json({
+        success: false,
+        msg: "Product not found",
+      });
+    }
+
     res.status(200).json({
       success: true,
-      product: updatedProduct,
+      product,
     });
 
   } catch (error) {
-    res.status(500).json({ success: false, msg: error.message });
+
+    res.status(500).json({
+      success: false,
+      msg: error.message,
+    });
   }
 };
+
 
 /* ================= DELETE PRODUCT ================= */
 export const deleteProduct = async (req, res) => {
   try {
+
     const { id } = req.params;
 
-    const product = await Product.findById(id);
+    const product = await Product.findByIdAndDelete(id);
 
     if (!product) {
       return res.status(404).json({
@@ -172,20 +198,25 @@ export const deleteProduct = async (req, res) => {
       });
     }
 
-    await product.deleteOne();
-
     res.status(200).json({
       success: true,
       msg: "Product deleted successfully",
     });
 
   } catch (error) {
-    res.status(500).json({ success: false, msg: error.message });
+
+    res.status(500).json({
+      success: false,
+      msg: error.message,
+    });
   }
 };
 
+
+/* ================= BULK CREATE PRODUCTS ================= */
 export const bulkCreateProducts = async (req, res) => {
   try {
+
     const { products } = req.body;
 
     if (!products || !Array.isArray(products) || products.length === 0) {
@@ -199,7 +230,6 @@ export const bulkCreateProducts = async (req, res) => {
       ...p,
       price: Number(p.price),
       stock: Number(p.stock),
-      createdBy: req.user.userId,
     }));
 
     const inserted = await Product.insertMany(formattedProducts);
@@ -211,6 +241,14 @@ export const bulkCreateProducts = async (req, res) => {
     });
 
   } catch (error) {
+
+    if (error.code === 11000) {
+      return res.status(400).json({
+        success: false,
+        msg: "Duplicate product code in list",
+      });
+    }
+
     res.status(500).json({
       success: false,
       msg: error.message,
@@ -219,8 +257,10 @@ export const bulkCreateProducts = async (req, res) => {
 };
 
 
+/* ================= EXCEL UPLOAD ================= */
 export const uploadProductsFromExcel = async (req, res) => {
   try {
+
     if (!req.file) {
       return res.status(400).json({
         success: false,
@@ -229,7 +269,9 @@ export const uploadProductsFromExcel = async (req, res) => {
     }
 
     const workbook = XLSX.read(req.file.buffer, { type: "buffer" });
+
     const sheetName = workbook.SheetNames[0];
+
     const sheet = workbook.Sheets[sheetName];
 
     const data = XLSX.utils.sheet_to_json(sheet);
@@ -251,7 +293,6 @@ export const uploadProductsFromExcel = async (req, res) => {
       price: Number(row.price),
       stock: Number(row.stock),
       description: row.description || "",
-      createdBy: req.user.userId,
     }));
 
     const inserted = await Product.insertMany(formatted);
@@ -263,6 +304,14 @@ export const uploadProductsFromExcel = async (req, res) => {
     });
 
   } catch (error) {
+
+    if (error.code === 11000) {
+      return res.status(400).json({
+        success: false,
+        msg: "Duplicate product code in Excel",
+      });
+    }
+
     res.status(500).json({
       success: false,
       msg: error.message,

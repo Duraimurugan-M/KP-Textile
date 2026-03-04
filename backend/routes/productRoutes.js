@@ -14,18 +14,18 @@ import { upload } from "../middleware/uploadMiddleware.js";
 const router = express.Router();
 
 router.route("/")
-  .post(authGuard, createProduct)
-  .get(authGuard, getAllProducts);
+  .post(createProduct)
+  .get(getAllProducts);
 
 router.route("/:id")
-  .get(authGuard, getProduct)
-  .patch(authGuard, updateProduct)
-  .delete(authGuard, deleteProduct);
-  router.post("/bulk", authGuard, bulkCreateProducts);
+  .get(getProduct)
+  .patch(updateProduct)
+  .delete(deleteProduct);
 
- router.post(
+router.post("/bulk", bulkCreateProducts);
+
+router.post(
   "/upload-excel",
-  authGuard,
   upload.single("file"),
   uploadProductsFromExcel
 );
