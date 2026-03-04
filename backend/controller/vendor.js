@@ -1,4 +1,4 @@
-import Vendor from "../model/vendor.model.js";
+import Vendor from "../model/Vendor.js";
 
 /* =========================
    HELPER FUNCTION

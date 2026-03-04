@@ -5,7 +5,7 @@ import {
   getVendorById,
   updateVendor,
   deleteVendor,
-} from "../controller/vendor.controller.js";
+} from "../controller/vendor.js";
 
 const router = express.Router();
 

@@ -3,7 +3,7 @@ import cors from "cors";
 
 import authRoutes from "./routes/authRoutes.js";
 import customerRoutes from "./routes/customerRoutes.js";
-import vendor from "./routes/vendor.routes.js";
+import vendor from "./routes/vendor.js";
 
 
 
