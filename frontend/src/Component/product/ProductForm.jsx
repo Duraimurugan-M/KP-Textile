@@ -1,16 +1,18 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Grid,
   TextField,
   Button,
-  MenuItem,
   Typography,
   IconButton,
 } from "@mui/material";
+
 import AddIcon from "@mui/icons-material/Add";
 import DeleteIcon from "@mui/icons-material/Delete";
 
-// 🔥 Factory function (important)
+import customFetch from "../../utils/customFetch";
+import { toast } from "react-toastify";
+
 const emptyRow = () => ({
   name: "",
   productCode: "",
@@ -23,51 +25,146 @@ const emptyRow = () => ({
   description: "",
 });
 
+export default function ProductForm({
+  editProduct,
+  editId,
+  setEditId,
+  fetchProducts,
+}) {
 
-export default function ProductForm({ addProduct }) {
   const [rows, setRows] = useState([emptyRow()]);
 
+  /* FILL FORM WHEN EDIT CLICK */
+
+useEffect(() => {
+
+  if (editProduct) {
+
+    setRows([{
+      name: editProduct.name || "",
+      productCode: editProduct.productCode || "",
+      hsnCode: editProduct.hsnCode || "",
+      category: editProduct.category || "",
+      fabric: editProduct.fabric || "",
+      color: editProduct.color || "",
+      price: editProduct.price || "",
+      stock: editProduct.stock || "",
+      description: editProduct.description || "",
+    }]);
+
+  }
+
+  /* CLEAR FORM WHEN CANCEL EDIT */
+
+  if (!editProduct) {
+
+    setRows([emptyRow()]);
+
+  }
+
+}, [editProduct]);
+
   const handleChange = (index, e) => {
+
     const updated = [...rows];
+
     updated[index] = {
       ...updated[index],
       [e.target.name]: e.target.value,
     };
+
     setRows(updated);
+
   };
 
   const addRow = () => {
+
     setRows([...rows, emptyRow()]);
+
   };
 
   const removeRow = (index) => {
+
     const updated = rows.filter((_, i) => i !== index);
+
     setRows(updated.length ? updated : [emptyRow()]);
+
   };
 
-  const handleSubmit = (e) => {
+  /* SUBMIT */
+
+  const handleSubmit = async (e) => {
+
     e.preventDefault();
 
     const validRows = rows.filter(
       (row) => row.name && row.productCode && row.hsnCode
     );
 
-    if (validRows.length === 0) return;
+    if (validRows.length === 0) {
 
-    addProduct(validRows);
+      toast.warning("Please fill required fields");
 
+      return;
 
-    setRows([emptyRow()]);
+    }
+
+    try {
+
+      /* EDIT MODE */
+
+      if (editId) {
+
+        await customFetch.patch(
+          `/products/${editId}`,
+          validRows[0]
+        );
+
+        toast.success("Product updated");
+
+        setEditId(null);
+
+      }
+
+      /* ADD MODE */
+
+      else {
+
+        await customFetch.post(
+          "/products",
+          { products: validRows }
+        );
+
+        toast.success("Products added");
+
+      }
+
+      setRows([emptyRow()]);
+
+      fetchProducts();
+
+    } catch {
+
+      toast.error("Operation failed");
+
+    }
+
   };
 
   return (
+
     <>
+
       <Typography variant="h6" sx={{ mb: 2 }}>
-        Add Products
+
+        {editId ? "Edit Product" : "Add Products"}
+
       </Typography>
 
       <form onSubmit={handleSubmit}>
+
         {rows.map((row, index) => (
+
           <Grid
             container
             spacing={2}
@@ -78,21 +175,25 @@ export default function ProductForm({ addProduct }) {
               pb: 2,
             }}
           >
+
             <Grid item xs={12} md={2}>
+
               <TextField
                 label="Name"
                 name="name"
-                sx={{ width: 200 }}
+                fullWidth
                 value={row.name}
                 onChange={(e) => handleChange(index, e)}
               />
+
             </Grid>
 
             <Grid item xs={12} md={2}>
+
               <TextField
                 label="Category"
                 name="category"
-                sx={{ width: 200 }}
+                fullWidth
                 value={row.category}
                 onChange={(e) => handleChange(index, e)}
               />
@@ -100,68 +201,81 @@ export default function ProductForm({ addProduct }) {
             </Grid>
 
             <Grid item xs={12} md={2}>
+
               <TextField
                 label="Fabric"
                 name="fabric"
-                sx={{ width: 200 }}
+                fullWidth
                 value={row.fabric}
                 onChange={(e) => handleChange(index, e)}
               />
+
             </Grid>
 
             <Grid item xs={12} md={2}>
+
               <TextField
                 label="Color"
                 name="color"
-                sx={{ width: 200 }}
+                fullWidth
                 value={row.color}
                 onChange={(e) => handleChange(index, e)}
               />
+
             </Grid>
 
-            <Grid item xs={12} md={1.5}>
+            <Grid item xs={12} md={1}>
+
               <TextField
                 label="Price"
                 name="price"
                 type="number"
-                sx={{ width: 200 }}
+                fullWidth
                 value={row.price}
                 onChange={(e) => handleChange(index, e)}
               />
+
             </Grid>
 
-            <Grid item xs={12} md={1.5}>
+            <Grid item xs={12} md={1}>
+
               <TextField
                 label="Stock"
                 name="stock"
                 type="number"
-                sx={{ width: 200 }}
+                fullWidth
                 value={row.stock}
                 onChange={(e) => handleChange(index, e)}
               />
+
             </Grid>
 
             <Grid item xs={12} md={1.5}>
+
               <TextField
-                label="product Code"
+                label="Product Code"
                 name="productCode"
-                sx={{ width: 200 }}
+                fullWidth
                 value={row.productCode}
                 onChange={(e) => handleChange(index, e)}
               />
+
             </Grid>
 
-            <Grid item xs={12} md={2}>
+            <Grid item xs={12} md={1.5}>
+
               <TextField
                 label="HSN Code"
                 name="hsnCode"
-                sx={{ width: 200 }}
+                fullWidth
                 value={row.hsnCode}
                 onChange={(e) => handleChange(index, e)}
               />
+
             </Grid>
 
             <Grid item xs={12}>
+
               <TextField
                 fullWidth
                 label="Description"
@@ -169,33 +283,56 @@ export default function ProductForm({ addProduct }) {
                 value={row.description}
                 onChange={(e) => handleChange(index, e)}
               />
+
             </Grid>
 
+            {!editId && (
 
-            <Grid item xs={12} md={0.5}>
-              <IconButton color="error" onClick={() => removeRow(index)}>
-                <DeleteIcon />
-              </IconButton>
-            </Grid>
+              <Grid item xs={12} md={0.5}>
+
+                <IconButton
+                  color="error"
+                  onClick={() => removeRow(index)}
+                >
+
+                  <DeleteIcon />
+
+                </IconButton>
+
+              </Grid>
+
+            )}
+
           </Grid>
+
         ))}
 
-        <Button
-          startIcon={<AddIcon />}
-          onClick={addRow}
-          sx={{ mr: 2, width: 200, height: 55 }}
-        >
-          Add Row
-        </Button>
+        {!editId && (
+
+          <Button
+            startIcon={<AddIcon />}
+            onClick={addRow}
+            sx={{ mr: 2, width: 200, height: 55 }}
+          >
+            Add Row
+          </Button>
+
+        )}
 
         <Button
           variant="contained"
           sx={{ width: 200, height: 55 }}
           type="submit"
         >
-          Save All
+
+          {editId ? "Update Product" : "Save All"}
+
         </Button>
+
       </form>
+
     </>
+
   );
+
 }

@@ -242,25 +242,18 @@ import {
   FaBars,
   FaSignOutAlt,
 } from "react-icons/fa";
+
 import customFetch from "../utils/customFetch.js";
 import { toast } from "react-toastify";
 
-
 const menuItems = [
   { label: "Dashboard", path: "/app", icon: FaTachometerAlt, exact: true },
-
   { label: "Vendor", path: "/app/vendors", icon: FaTruck },
-
   { label: "Customer", path: "/app/customers", icon: FaUsers },
-
   { label: "Product", path: "/app/products", icon: FaBoxOpen },
-
   { label: "Purchase", path: "/app/purchases", icon: FaShoppingBag },
-
   { label: "Inventory", path: "/app/inventory", icon: FaWarehouse },
-
   { label: "Sales", path: "/app/sales", icon: FaShoppingCart },
-
   {
     label: "Reports",
     icon: FaChartBar,
@@ -273,221 +266,302 @@ const menuItems = [
   },
 ];
 
-
 export default function Sidebar() {
-  const [collapsed] = useState(false);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [openReport, setOpenReport] = useState(false);
+
+  const [collapsed,setCollapsed] = useState(true);
+  const [mobileMenuOpen,setMobileMenuOpen] = useState(false);
+  const [openReport,setOpenReport] = useState(false);
 
   const navigate = useNavigate();
 
   const handleLogout = async ()=>{
-    try {
+
+    try{
+
       await customFetch.post("/auth/logout");
-      toast.success("Logged out successfully ");
+
+      toast.success("Logged out successfully");
+
       setTimeout(()=>{
         navigate("/login");
       },800);
-    } catch (error) {
+
+    }catch{
+
       toast.error("Logout failed");
+
     }
+
   };
 
-  /** CENTRAL STYLE CONTROL
-   * Change font size, padding, spacing HERE only
-   */
-  const menuStyle =
-    "flex items-center gap-4 px-4 py-3 text-base rounded transition";
-
-  const subMenuStyle =
-    "block px-6 py-2.5 rounded text-base transition hover:bg-white/10";
+  const menuItem =
+  "flex items-center gap-4 px-4 py-3 rounded transition-all duration-150 hover:bg-white/10";
 
   return (
     <>
-      {/* ================= MOBILE TOP BAR ================= */}
+      {/* MOBILE HEADER */}
+
       <header
-        className="md:hidden fixed top-0 left-0 right-0 z-50 text-white"
-        style={{ backgroundColor: "#800E13" }}
+      className="md:hidden fixed top-0 left-0 right-0 z-50 text-white"
+      style={{backgroundColor:"#800E13"}}
       >
+
         <div className="flex items-center justify-between px-4 py-3">
+
           <div className="flex items-center gap-2">
+
             <img
-              src="https://via.placeholder.com/32"
-              alt="KP Textile"
-              className="w-8 h-8 rounded-full bg-white"
+            src="https://via.placeholder.com/32"
+            className="w-8 h-8 rounded-full object-cover"
             />
-            <span className="font-semibold text-lg">YUVIRAA SILKS</span>
+
+            <span className="font-semibold text-lg">
+              YUVIRAA SILKS
+            </span>
+
           </div>
 
-          <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
-            <FaBars size={22} />
+          <button onClick={()=>setMobileMenuOpen(!mobileMenuOpen)}>
+            <FaBars size={22}/>
           </button>
+
         </div>
 
-        {/* ================= MOBILE MENU ================= */}
         {mobileMenuOpen && (
-  <div className="px-2 pb-3 space-y-1 max-h-[calc(100vh-60px)] overflow-y-auto hide-scrollbar">
 
-            {menuItems.map((item) => {
+          <div className="px-2 pb-3 space-y-1 max-h-[calc(100vh-60px)] overflow-y-auto hide-scrollbar">
+
+            {menuItems.map((item)=>{
+
               const Icon = item.icon;
 
-              // REPORTS DROPDOWN
-              if (item.children) {
-                return (
+              if(item.children){
+
+                return(
+
                   <div key={item.label}>
+
                     <button
-                      onClick={() => setOpenReport(!openReport)}
-                      className={`${menuStyle} w-full hover:bg-white/10`}
+                    onClick={()=>setOpenReport(!openReport)}
+                    className={`${menuItem} w-full`}
                     >
-                      <Icon size={18} />
+
+                      <Icon size={20}/>
                       <span className="flex-1 text-left">{item.label}</span>
-                      <span>{openReport ? "▾" : "▸"}</span>
+                      <span>{openReport ? "▾":"▸"}</span>
+
                     </button>
 
                     {openReport && (
-                      <div className="ml-4 mt-1 space-y-1  ">
-                        {item.children.map((sub) => (
+
+                      <div className="ml-6 mt-1 space-y-1">
+
+                        {item.children.map(sub=>(
                           <NavLink
-                            key={sub.path}
-                            to={sub.path}
-                            onClick={() => setMobileMenuOpen(false)}
-                            className={({ isActive }) =>
-                              `${subMenuStyle} ${
-                                isActive ? "bg-white/20" : ""
-                              }`
-                            }
+                          key={sub.path}
+                          to={sub.path}
+                          onClick={()=>setMobileMenuOpen(false)}
+                          className="block px-3 py-2 text-sm hover:bg-white/10 rounded"
                           >
                             {sub.label}
                           </NavLink>
                         ))}
+
                       </div>
+
                     )}
+
                   </div>
+
                 );
+
               }
 
-              // NORMAL ITEM
-              return (
+              return(
+
                 <NavLink
-                  key={item.label}
-                  to={item.path}
-                  end={item.exact}
-                  onClick={() => setMobileMenuOpen(false)}
-                  className={({ isActive }) =>
-                    `${menuStyle} ${
-                      isActive ? "bg-white/20" : "hover:bg-white/10"
-                    }`
-                  }
+                key={item.label}
+                to={item.path}
+                end={item.exact}
+                onClick={()=>setMobileMenuOpen(false)}
+                className={({isActive}) =>
+                  `${menuItem} ${isActive?"bg-white/20":""}`
+                }
                 >
-                  <Icon size={18} />
+
+                  <Icon size={20}/>
                   <span>{item.label}</span>
+
                 </NavLink>
+
               );
+
             })}
 
-            {/* ===== MOBILE LOGOUT ===== */}
-           <button
-  onClick={() => {
-    setMobileMenuOpen(false);
-    handleLogout();
-  }}
-  className={`${menuStyle} w-full bg-white/10 hover:bg-white/20 mt-2`}
->
-  <FaSignOutAlt size={18} />
-  <span>Logout</span>
-</button>
+            <button
+            onClick={()=>{
+              setMobileMenuOpen(false);
+              handleLogout();
+            }}
+            className={`${menuItem} w-full bg-white/10`}
+            >
+
+              <FaSignOutAlt size={20}/>
+              <span>Logout</span>
+
+            </button>
 
           </div>
+
         )}
+
       </header>
 
-      {/* ================= DESKTOP SIDEBAR ================= */}
-      <aside
-  className={`hidden md:flex md:flex-col h-screen text-white relative ${
-    collapsed ? "w-20" : "w-64"
-  }`}
-  style={{
-    background: "linear-gradient(180deg, #800E13 0%, #640D14 100%)",
-  }}
->
+      {/* DESKTOP SIDEBAR */}
 
-        {/* BRAND */}
-        <div className="flex items-center gap-3 px-4 py-6 border-b border-white/20">
+      <aside
+      onMouseEnter={()=>setCollapsed(false)}
+      onMouseLeave={()=>setCollapsed(true)}
+      className={`hidden md:flex md:flex-col h-screen text-white transition-all duration-200 ${
+        collapsed ? "w-20":"w-64"
+      }`}
+      style={{
+        background:"linear-gradient(180deg,#800E13 0%,#640D14 100%)"
+      }}
+      >
+
+        {/* LOGO */}
+
+        <div className="flex items-center justify-center py-6 border-b border-white/20">
+
           <img
-            src="https://via.placeholder.com/40"
-            alt="KP Textile"
-            className="w-10 h-10 rounded-full bg-white"
+          src="https://via.placeholder.com/80"
+          className="w-12 h-12 rounded-full object-cover"
           />
-          <div>
-            <h1 className="font-bold text-xl">YUVIRAA SILKS</h1>
-            <p className="text-sm text-white/70">Billing Software</p>
-          </div>
+
+          {!collapsed && (
+
+            <div className="ml-3">
+
+              <h1 className="font-bold text-lg">
+                YUVIRAA SILKS
+              </h1>
+
+              <p className="text-xs text-white/70">
+                Billing Software
+              </p>
+
+            </div>
+
+          )}
+
         </div>
 
         {/* MENU */}
-        <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto hide-scrollbar">
 
-          {menuItems.map((item) => {
+        <nav className="flex-1 px-2 py-4 space-y-1 overflow-y-auto hide-scrollbar">
+
+          {menuItems.map((item)=>{
+
             const Icon = item.icon;
 
-            if (item.children) {
-              return (
+            if(item.children){
+
+              return(
+
                 <div key={item.label}>
+
                   <button
-                    onClick={() => setOpenReport(!openReport)}
-                    className={`${menuStyle} w-full hover:bg-white/10`}
+                  onClick={()=>setOpenReport(!openReport)}
+                  className={`${menuItem} w-full ${
+                    collapsed ? "justify-center":""
+                  }`}
                   >
-                    <Icon size={18} />
-                    <span className="flex-1 text-left">{item.label}</span>
-                    <span>{openReport ? "▾" : "▸"}</span>
+
+                    <Icon size={20}/>
+
+                    {!collapsed && (
+                      <span className="flex-1 text-left">
+                        {item.label}
+                      </span>
+                    )}
+
+                    {!collapsed && (
+                      <span>{openReport ? "▾":"▸"}</span>
+                    )}
+
                   </button>
 
-                  {openReport && (
-                    <div className="ml-4 mt-1 space-y-1">
-                      {item.children.map((sub) => (
+                  {!collapsed && openReport && (
+
+                    <div className="ml-6 mt-1 space-y-1">
+
+                      {item.children.map(sub=>(
                         <NavLink
-                          key={sub.path}
-                          to={sub.path}
-                          className={subMenuStyle}
+                        key={sub.path}
+                        to={sub.path}
+                        className="block px-3 py-2 text-sm hover:bg-white/10 rounded"
                         >
                           {sub.label}
                         </NavLink>
                       ))}
+
                     </div>
+
                   )}
+
                 </div>
+
               );
+
             }
 
-            return (
+            return(
+
               <NavLink
-                key={item.label}
-                to={item.path}
-                end={item.exact}
-                className={({ isActive }) =>
-                  `${menuStyle} ${
-                    isActive ? "bg-white/20" : "hover:bg-white/10"
-                  }`
-                }
+              key={item.label}
+              to={item.path}
+              end={item.exact}
+              className={({isActive}) =>
+                `${menuItem} ${
+                  collapsed ? "justify-center":""
+                } ${isActive?"bg-white/20":""}`
+              }
               >
-                <Icon size={18} />
-                <span>{item.label}</span>
+
+                <Icon size={20}/>
+
+                {!collapsed && (
+                  <span>{item.label}</span>
+                )}
+
               </NavLink>
+
             );
+
           })}
+
         </nav>
 
-        {/* LOGOUT DESKTOP */}
-        <div className="px-3 py-4 border-t border-white/20 mt-auto">
+        {/* LOGOUT */}
+
+        <div className="px-2 py-4 border-t border-white/20">
+
           <button
-  onClick={handleLogout}
-  className={`${menuStyle} w-full bg-white/10 hover:bg-white/20`}
->
-  <FaSignOutAlt size={18} />
-  <span>Logout</span>
-</button>
+          onClick={handleLogout}
+          className={`${menuItem} w-full ${
+            collapsed ? "justify-center":""
+          } bg-white/10`}
+          >
+
+            <FaSignOutAlt size={20}/>
+
+            {!collapsed && <span>Logout</span>}
+
+          </button>
 
         </div>
+
       </aside>
     </>
   );
