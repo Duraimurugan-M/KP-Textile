@@ -1,6 +1,9 @@
 import { useEffect, useState } from "react";
 import { Stack } from "@mui/material";
-import axios from "axios";
+import { toast } from "react-toastify";
+
+import customFetch from "../../utils/customFetch";
+
 import CustomerForm from "../../Component/Customer/CustomerForm";
 import CustomerList from "../../Component/Customer/CustomerList";
 
@@ -18,13 +21,12 @@ export default function CustomerModule() {
   const [form, setForm] = useState(emptyForm);
   const [editId, setEditId] = useState(null);
 
-  // ✅ Fetch Customers From Backend
   const fetchCustomers = async () => {
     try {
-      const res = await axios.get("http://localhost:5000/api/customers");
+      const res = await customFetch.get("/customers");
       setCustomers(res.data);
     } catch (error) {
-      console.error("Error fetching customers", error);
+      toast.error("Failed to load customers");
     }
   };
 
@@ -38,28 +40,33 @@ export default function CustomerModule() {
 
   const handleSubmit = async () => {
     if (!form.name || !form.mobile) {
-      alert("Customer name and mobile are required");
+      toast.warning("Customer name and mobile are required");
       return;
     }
 
     try {
       if (editId) {
-        await axios.put(
-          `http://localhost:5000/api/customers/${editId}`,
-          form
-        );
+        await customFetch.put(`/customers/${editId}`, form);
+
+        toast.success("Customer updated successfully");
         setEditId(null);
       } else {
-        await axios.post(
-          "http://localhost:5000/api/customers",
-          form
-        );
+        await customFetch.post("/customers", form);
+
+        toast.success("Customer added successfully");
       }
 
       setForm(emptyForm);
-      fetchCustomers(); // refresh list
+      fetchCustomers();
+
     } catch (error) {
-      console.error("Error saving customer", error);
+
+      if (error.response?.data?.message) {
+        toast.error(error.response.data.message);
+      } else {
+        toast.error("Something went wrong");
+      }
+
     }
   };
 
@@ -71,14 +78,20 @@ export default function CustomerModule() {
   const handleDelete = async (customer) => {
     if (window.confirm("Delete this customer?")) {
       try {
-        await axios.delete(
-          `http://localhost:5000/api/customers/${customer._id}`
-        );
+        await customFetch.delete(`/customers/${customer._id}`);
+
+        toast.success("Customer deleted successfully");
         fetchCustomers();
+
       } catch (error) {
-        console.error("Error deleting customer", error);
+        toast.error("Delete failed");
       }
     }
+  };
+
+  const handleCancel = () => {
+    setForm(emptyForm);
+    setEditId(null);
   };
 
   return (
@@ -87,6 +100,7 @@ export default function CustomerModule() {
         form={form}
         onChange={handleChange}
         onSubmit={handleSubmit}
+        onCancel={handleCancel}
         isEdit={!!editId}
       />
 
