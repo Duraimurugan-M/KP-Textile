@@ -10,24 +10,29 @@ const vendorSchema = new mongoose.Schema(
     mobile: {
       type: String,
       required: true,
+      unique: true,   // ✅ UNIQUE
+      trim: true,
       match: [/^\d{10}$/, "Mobile number must be 10 digits"],
     },
     email: {
       type: String,
-      unique: true,
+      unique: true,   // ✅ UNIQUE
+      sparse: true,
+      trim: true,
       match: [/^\S+@\S+\.\S+$/, "Please enter a valid email address"],
     },
     gst: {
       type: String,
-      unique: true,
-      match:[/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/, "Please enter a valid GST number"],
+      unique: true,   // ✅ UNIQUE
+      sparse: true,
+      trim: true,
+      match: [
+        /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/,
+        "Please enter a valid GST number",
+      ],
     },
-    state: {
-      type: String,
-    },
-    address: {
-      type: String,
-    },
+    state: String,
+    address: String,
   },
   { timestamps: true }
 );

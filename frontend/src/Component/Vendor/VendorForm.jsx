@@ -4,12 +4,14 @@ import {
   Button,
   Paper,
   Typography,
+  Stack,
 } from "@mui/material";
 
 export default function VendorForm({
   form,
   onChange,
   onSubmit,
+  onCancel,   // ✅ added
   isEdit,
 }) {
   return (
@@ -83,13 +85,26 @@ export default function VendorForm({
           />
         </Grid>
 
+        {/* ✅ BUTTON SECTION */}
         <Grid item xs={12} textAlign="right">
-          <Button
-            variant="contained"
-            onClick={onSubmit}
-          >
-            {isEdit ? "Update Vendor" : "Add Vendor"}
-          </Button>
+          <Stack direction="row" spacing={2} justifyContent="flex-end">
+            <Button
+              variant="contained"
+              onClick={onSubmit}
+            >
+              {isEdit ? "Update Vendor" : "Add Vendor"}
+            </Button>
+
+            {isEdit && (
+              <Button
+                variant="outlined"
+                color="secondary"
+                onClick={onCancel}
+              >
+                Cancel
+              </Button>
+            )}
+          </Stack>
         </Grid>
       </Grid>
     </Paper>

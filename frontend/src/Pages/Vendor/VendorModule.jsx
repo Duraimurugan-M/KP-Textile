@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Stack } from "@mui/material";
+import { toast } from "react-toastify";
 import customFetch from "../../utils/customFetch";
 import VendorForm from "../../Component/Vendor/VendorForm";
 import VendorList from "../../Component/Vendor/VendorList";
@@ -18,13 +19,12 @@ export default function VendorModule() {
   const [form, setForm] = useState(emptyForm);
   const [editId, setEditId] = useState(null);
 
-  // ✅ GET ALL (getVendors controller)
   const fetchVendors = async () => {
     try {
       const { data } = await customFetch.get("vendors");
       setVendors(data);
     } catch (error) {
-      console.error(error.response?.data || error.message);
+      toast.error(error.response?.data?.message || "Error fetching vendors");
     }
   };
 
@@ -32,36 +32,33 @@ export default function VendorModule() {
     fetchVendors();
   }, []);
 
-  // ✅ INPUT CHANGE
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  // ✅ CREATE OR UPDATE
   const handleSubmit = async () => {
     if (!form.name || !form.mobile) {
-      alert("Vendor name and mobile are required");
+      toast.error("Vendor name and mobile are required");
       return;
     }
 
     try {
       if (editId) {
-        // 🔹 CALLS updateVendor controller
         await customFetch.put(`vendors/${editId}`, form);
+        toast.success("Vendor updated successfully");
       } else {
-        // 🔹 CALLS createVendor controller
         await customFetch.post("vendors", form);
+        toast.success("Vendor added successfully");
       }
 
       setForm(emptyForm);
       setEditId(null);
       fetchVendors();
     } catch (error) {
-      console.error(error.response?.data || error.message);
+      toast.error(error.response?.data?.message || "Something went wrong");
     }
   };
 
-  // ✅ EDIT (only sets state, no backend call here)
   const handleEdit = (vendor) => {
     setForm({
       name: vendor.name || "",
@@ -74,16 +71,22 @@ export default function VendorModule() {
     setEditId(vendor._id);
   };
 
-  // ✅ DELETE (calls deleteVendor controller)
   const handleDelete = async (id) => {
     if (window.confirm("Delete this vendor?")) {
       try {
         await customFetch.delete(`vendors/${id}`);
+        toast.success("Vendor deleted successfully");
         fetchVendors();
       } catch (error) {
-        console.error(error.response?.data || error.message);
+        toast.error(error.response?.data?.message || "Delete failed");
       }
     }
+  };
+
+  // ✅ NEW CANCEL FUNCTION
+  const handleCancel = () => {
+    setForm(emptyForm);
+    setEditId(null);
   };
 
   return (
@@ -92,6 +95,7 @@ export default function VendorModule() {
         form={form}
         onChange={handleChange}
         onSubmit={handleSubmit}
+        onCancel={handleCancel}
         isEdit={!!editId}
       />
 
