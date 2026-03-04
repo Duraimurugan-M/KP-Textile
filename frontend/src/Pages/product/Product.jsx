@@ -5,155 +5,237 @@ import {
   Paper,
   Grid,
   TextField,
-  MenuItem,
   Button,
 } from "@mui/material";
 
 import ProductForm from "../../Component/product/ProductForm";
 import ProductList from "../../Component/product/ProductList";
+
 import customFetch from "../../utils/customFetch";
 import { toast } from "react-toastify";
 
 export default function ProductPage() {
-const [products, setProducts] = useState([]);
 
+  const [products, setProducts] = useState([]);
+  const [selectedProducts, setSelectedProducts] = useState([]);
   const [search, setSearch] = useState("");
-  
-  const [excelFile, setExcelFile] = useState(null);
 
+  /* ================= FETCH PRODUCTS ================= */
 
-  const uploadExcel = async () => {
-  if (!excelFile) return toast.error("Select file first");
+  const fetchProducts = async () => {
+    try {
 
-  const formData = new FormData();
-  formData.append("file", excelFile);
+      const { data } = await customFetch.get("/products");
 
-  try {
-    await customFetch.post("/products/upload-excel", formData, {
-      headers: { "Content-Type": "multipart/form-data" },
+      setProducts(data.products);
+
+    } catch (error) {
+
+      toast.error("Failed to load products");
+
+    }
+  };
+
+  useEffect(() => {
+    fetchProducts();
+  }, []);
+
+  /* ================= SELECT PRODUCT ================= */
+
+  const toggleSelect = (product) => {
+
+    if (selectedProducts.some(p => p._id === product._id)) {
+
+      setSelectedProducts(
+        selectedProducts.filter(p => p._id !== product._id)
+      );
+
+    } else {
+
+      setSelectedProducts([...selectedProducts, product]);
+
+    }
+  };
+
+  /* ================= SELECT ALL ================= */
+
+  const toggleSelectAll = (checked) => {
+
+    if (checked) {
+
+      setSelectedProducts(products);
+
+    } else {
+
+      setSelectedProducts([]);
+
+    }
+
+  };
+
+  /* ================= PRINT BARCODES ================= */
+
+  const printBarcodes = () => {
+
+    if (!selectedProducts.length) {
+
+      toast.warning("Select products first");
+      return;
+
+    }
+
+    const printWindow = window.open("", "_blank");
+
+    let html = "";
+
+    selectedProducts.forEach((p) => {
+
+      const barcodeElement = document.getElementById(`barcode-${p._id}`);
+
+      const barcodeSVG = barcodeElement?.innerHTML || "";
+
+      html += `
+        <div class="label">
+
+          <div class="shop">KP Textile</div>
+
+          <div class="name">${p.name}</div>
+
+          <div class="price">MRP ₹${p.price}</div>
+
+          ${barcodeSVG}
+
+          <div class="code">${p.productCode}</div>
+
+        </div>
+      `;
     });
 
-    toast.success("Excel uploaded successfully");
-    fetchProducts();
+    printWindow.document.write(`
+      <html>
 
-  } catch (error) {
-    toast.error("Excel upload failed");
-  }
-};
+      <head>
 
-const fetchProducts= async ()=>{
-  try {
-    const {data}= await customFetch.get("/products");
-    setProducts(data.products);
-  } catch (error) {
-    console.log(error)
-  }
-};
+      <title>Print Barcode</title>
 
-useEffect(()=>{
-  fetchProducts();
-},[]);
+      <style>
 
-  // ✅ CLONE OBJECT + UNIQUE ID
-// const addProduct = async (p) => {
-//   try {
-//     await customFetch.post("/products", p);
-//     toast.success("Product added successfully");
-//     fetchProducts();
-//   } catch (error) {
-//     toast.error(error.response?.data?.msg || "Error adding product");
-//   }
-// };
+      body{
+        display:flex;
+        flex-wrap:wrap;
+        gap:5mm;
+        padding:5mm;
+        font-family:Arial;
+      }
 
-const addProduct = async (products) => {
-  try {
-    await customFetch.post("/products/bulk", {
-      products,
-    });
+      .label{
+        width:50mm;
+        height:25mm;
+        border:1px solid black;
+        display:flex;
+        flex-direction:column;
+        justify-content:center;
+        align-items:center;
+        text-align:center;
+      }
 
-    toast.success("Products added successfully");
-    fetchProducts();
+      .shop{
+        font-size:10px;
+        font-weight:bold;
+      }
 
-  } catch (error) {
-    toast.error("Bulk insert failed");
-  }
-};
+      .name{
+        font-size:9px;
+      }
 
+      .price{
+        font-size:9px;
+      }
 
- const updateProduct = async (updated) => {
-  try {
-    await customFetch.patch(`/products/${updated._id}`, updated);
-    toast.success("Product updated");
-    fetchProducts();
-  } catch (error) {
-    toast.error("Update failed");
-  }
-};
+      .code{
+        font-size:8px;
+      }
 
+      svg{
+        width:45mm;
+        height:12mm;
+      }
 
- const deleteProduct = async (id) => {
-  try {
-    await customFetch.delete(`/products/${id}`);
-    toast.success("Product deleted");
-    fetchProducts();
-  } catch (error) {
-    toast.error("Delete failed");
-  }
-};
+      </style>
 
+      </head>
 
-const filteredProducts = products.filter((p) =>
-  p.name?.toLowerCase().includes(search.toLowerCase()) ||
-  p.category?.toLowerCase().includes(search.toLowerCase())
-);
+      <body>
 
+      ${html}
+
+      </body>
+
+      </html>
+    `);
+
+    printWindow.document.close();
+
+    setTimeout(() => {
+
+      printWindow.print();
+
+    }, 500);
+
+  };
+
+  /* ================= SEARCH FILTER ================= */
+
+  const filteredProducts = products.filter(p =>
+    p.name?.toLowerCase().includes(search.toLowerCase())
+  );
+
+  /* ================= UI ================= */
 
   return (
+
     <Container sx={{ mt: 4 }}>
-      <Typography variant="h4">Product Management</Typography>
 
-<Paper sx={{ p: 3, mt: 3 }}>
-  <Typography variant="h6">Bulk Upload (Excel)</Typography>
-
-  <input
-    type="file"
-    accept=".xlsx,.xls"
-    onChange={(e) => setExcelFile(e.target.files[0])}
-  />
-
-  <Button
-    variant="contained"
-    sx={{ ml: 2 }}
-    onClick={uploadExcel}
-  >
-    Upload
-  </Button>
-</Paper>
-
+      <Typography variant="h4">
+        Product Management
+      </Typography>
 
       <Paper sx={{ p: 3, mt: 3 }}>
-        <ProductForm addProduct={addProduct} />
+        <ProductForm addProduct={() => {}} />
       </Paper>
 
       <Grid container spacing={2} sx={{ mt: 2 }}>
+
         <Grid item xs={6}>
           <TextField
             fullWidth
-            label="Search"
+            label="Search Product"
             onChange={(e) => setSearch(e.target.value)}
           />
         </Grid>
 
-       
+        <Grid item xs={6}>
+          <Button
+            variant="contained"
+            onClick={printBarcodes}
+          >
+            Print Barcode
+          </Button>
+        </Grid>
+
       </Grid>
 
       <Paper sx={{ p: 3, mt: 3 }}>
+
         <ProductList
           products={filteredProducts}
-          deleteProduct={deleteProduct}
-          updateProduct={updateProduct}
+          selected={selectedProducts.map(p => p._id)}
+          toggleSelect={toggleSelect}
+          toggleSelectAll={toggleSelectAll}
         />
+
       </Paper>
+
     </Container>
   );
 }

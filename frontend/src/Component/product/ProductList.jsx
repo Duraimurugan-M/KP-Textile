@@ -1,97 +1,88 @@
 import {
-  Grid,
-  TextField,
-  Button,
   Paper,
   Typography,
+  Table,
+  TableHead,
+  TableRow,
+  TableCell,
+  TableBody,
+  TableContainer,
+  Checkbox,
 } from "@mui/material";
+import Barcode from "react-barcode";
 
-export default function VendorForm({
-  form,
-  onChange,
-  onSubmit,
-  isEdit,
+export default function ProductList({
+  products = [],
+  selected,
+  toggleSelect,
+  toggleSelectAll,
 }) {
+  const allSelected = products.length > 0 && selected.length === products.length;
+
   return (
     <Paper sx={{ p: 3 }}>
       <Typography variant="h6" mb={2}>
-        {isEdit ? "Edit Vendor" : "Add Vendor"}
+        Product List
       </Typography>
 
-      <Grid container spacing={2}>
-        <Grid size={{ xs: 12, md: 6 }}>
-          <TextField
-            fullWidth
-            label="Vendor Name"
-            name="name"
-            value={form.name || ""}
-            onChange={onChange}
-            required
-          />
-        </Grid>
+      <TableContainer sx={{ overflowX: "auto" }}>
+        <Table size="small" sx={{ minWidth: 1000 }}>
+          <TableHead>
+            <TableRow>
+              {/* SELECT ALL CHECKBOX */}
+              <TableCell>
+                <Checkbox
+                  checked={allSelected}
+                  onChange={(e) => toggleSelectAll(e.target.checked)}
+                />
+              </TableCell>
 
-        <Grid size={{ xs: 12, md: 6 }}>
-          <TextField
-            fullWidth
-            label="Mobile Number"
-            name="mobile"
-            value={form.mobile || ""}
-            onChange={onChange}
-            required
-          />
-        </Grid>
+              <TableCell>#</TableCell>
+              <TableCell>Name</TableCell>
+              <TableCell>Category</TableCell>
+              <TableCell>Fabric</TableCell>
+              <TableCell>Color</TableCell>
+              <TableCell>Price</TableCell>
+              <TableCell>Stock</TableCell>
+              <TableCell>Code</TableCell>
+              <TableCell>Barcode</TableCell>
+            </TableRow>
+          </TableHead>
 
-        <Grid size={{ xs: 12, md: 6 }}>
-          <TextField
-            fullWidth
-            label="Email"
-            name="email"
-            value={form.email || ""}
-            onChange={onChange}
-          />
-        </Grid>
+          <TableBody>
+            {products.map((p, i) => (
+              <TableRow key={p._id} hover>
+                <TableCell>
+                  <Checkbox
+                    checked={selected.includes(p._id)}
+                    onChange={() => toggleSelect(p)}
+                  />
+                </TableCell>
 
-        <Grid size={{ xs: 12, md: 6 }}>
-          <TextField
-            fullWidth
-            label="GST Number"
-            name="gst"
-            value={form.gst || ""}
-            onChange={onChange}
-          />
-        </Grid>
+                <TableCell>{i + 1}</TableCell>
+                <TableCell>{p.name}</TableCell>
+                <TableCell>{p.category}</TableCell>
+                <TableCell>{p.fabric}</TableCell>
+                <TableCell>{p.color}</TableCell>
+                <TableCell>₹{p.price}</TableCell>
+                <TableCell>{p.stock}</TableCell>
+                <TableCell>{p.productCode}</TableCell>
 
-        <Grid size={{ xs: 12, md: 6 }}>
-          <TextField
-            fullWidth
-            label="State"
-            name="state"
-            value={form.state || ""}
-            onChange={onChange}
-          />
-        </Grid>
-
-        <Grid size={{ xs: 12 }}>
-          <TextField
-            fullWidth
-            multiline
-            rows={2}
-            label="Address"
-            name="address"
-            value={form.address || ""}
-            onChange={onChange}
-          />
-        </Grid>
-
-        <Grid size={{ xs: 12 }} textAlign="right">
-          <Button
-            variant="contained"
-            onClick={onSubmit}
-          >
-            {isEdit ? "Update Vendor" : "Add Vendor"}
-          </Button>
-        </Grid>
-      </Grid>
+                <TableCell>
+                  <div id={`barcode-${p._id}`}>
+                    <Barcode
+                      value={p.productCode}
+                      width={1}
+                      height={40}
+                      fontSize={12}
+                    />
+                  </div>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </TableContainer>
     </Paper>
   );
 }
