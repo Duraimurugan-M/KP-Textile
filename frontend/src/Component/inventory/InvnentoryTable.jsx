@@ -9,10 +9,11 @@ import {
   Paper,
 } from "@mui/material";
 
-export default function InventoryTable({ products }) {
+export default function InventoryTable({ products = [] }) {
   const stockStatus = (stock) => {
-    if (stock === 0) return <Chip label="Out" color="error" />;
-    if (stock < 5) return <Chip label="Low" color="warning" />;
+    const currentStock = Number(stock || 0);
+    if (currentStock === 0) return <Chip label="Out" color="error" />;
+    if (currentStock < 10) return <Chip label="Low" color="warning" />;
     return <Chip label="In Stock" color="success" />;
   };
 
@@ -31,11 +32,11 @@ export default function InventoryTable({ products }) {
 
         <TableBody>
           {products.map((p) => (
-            <TableRow key={p.id}>
+            <TableRow key={p._id || p.id}>
               <TableCell>{p.name}</TableCell>
               <TableCell>{p.category}</TableCell>
-              <TableCell>₹{p.price}</TableCell>
-              <TableCell>{p.stock}</TableCell>
+              <TableCell>{`Rs ${Number(p.price || 0).toLocaleString()}`}</TableCell>
+              <TableCell>{Number(p.stock || 0)}</TableCell>
               <TableCell>{stockStatus(p.stock)}</TableCell>
             </TableRow>
           ))}

@@ -1,64 +1,63 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Container, Typography, Paper } from "@mui/material";
-import PurchaseList from "../../Component/purhcase/PurhcaseList";
-import PurchaseForm from "../../Component/purhcase/purchaseForm";
+import PurchaseForm from "../../Component/purchase/PurchaseForm";
+import PurchaseList from "../../Component/purchase/PurchaseList";
+import customFetch from "../../utils/customFetch";
 
 export default function PurchasePage() {
-  const [products, setProducts] = useState(
-    () => JSON.parse(localStorage.getItem("products")) || [],
-  );
+  const [products, setProducts] = useState([]);
+  const [vendors, setVendors] = useState([]);
+  const [purchases, setPurchases] = useState([]);
 
-  const [purchases, setPurchases] = useState(
-    () => JSON.parse(localStorage.getItem("purchases")) || [],
-  );
+const fetchData = async () => {
+  try {
+    const p = await customFetch.get("products");
+    const v = await customFetch.get("vendors");
+    const pur = await customFetch.get("purchases");
+
+    // SAFE DATA EXTRACTION
+    setProducts(p.data?.products || []);
+    setVendors(v.data?.vendors || []);
+    setPurchases(pur.data?.purchases || pur.data?.data || []);
+
+  } catch (error) {
+    console.error("Fetch error:", error);
+  }
+};
 
   useEffect(() => {
-    localStorage.setItem("purchases", JSON.stringify(purchases));
-  }, [purchases]);
+    fetchData();
+  }, []);
 
-  useEffect(() => {
-    localStorage.setItem("products", JSON.stringify(products));
-  }, [products]);
+  const handleSubmit = async (data) => {
+    await customFetch.post("purchases", data);
 
-  // 🔥 MAIN HANDLER
-const handlePurchase = (rows) => {
-  const purchase = {
-    id: Date.now(),
-    date: new Date().toLocaleDateString(),
-
-    // ✅ FIX: correct fields
-    supplierId: rows[0].supplierId,
-    supplierName: rows[0].supplierName,
-
-    items: rows.map((r) => ({
-      productId: r.productId,
-      qty: Number(r.qty),
-      price: Number(r.price),
-    })),
+    fetchData();
   };
 
-  // 💾 Save purchase
-  setPurchases((prev) => [purchase, ...prev]);
-
-  // 📦 Update stock
-  setProducts((prev) =>
-    prev.map((p) => {
-      const found = purchase.items.find((i) => i.productId === p.id);
-      return found ? { ...p, stock: p.stock + found.qty } : p;
-    })
-  );
-};
+  const handleDelete = async (id) => {
+    await customFetch.delete(`purchases/${id}`);
+    fetchData();
+  };
 
   return (
     <Container sx={{ mt: 4 }}>
       <Typography variant="h4">Purchase Module</Typography>
 
       <Paper sx={{ p: 3, mt: 3 }}>
-        <PurchaseForm products={products} onPurchase={handlePurchase} />
+        <PurchaseForm
+          products={products}
+          vendors={vendors}
+          onSubmit={handleSubmit}
+        />
       </Paper>
 
       <Paper sx={{ p: 3, mt: 3 }}>
-        <PurchaseList purchases={purchases} products={products} />
+        <PurchaseList
+          purchases={purchases}
+          products={products}
+          onDelete={handleDelete}
+        />
       </Paper>
     </Container>
   );

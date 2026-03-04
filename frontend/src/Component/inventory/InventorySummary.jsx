@@ -3,14 +3,10 @@ import Inventory2Icon from "@mui/icons-material/Inventory2";
 import CurrencyRupeeIcon from "@mui/icons-material/CurrencyRupee";
 import WarningIcon from "@mui/icons-material/Warning";
 import CategoryIcon from "@mui/icons-material/Category";
+import ShoppingBagIcon from "@mui/icons-material/ShoppingBag";
 
-export default function InventorySummary({ products }) {
-  const totalItems = products.length;
-  const totalQty = products.reduce((s, p) => s + p.stock, 0);
-  const totalValue = products.reduce((s, p) => s + p.price * p.stock, 0);
-  const lowStock = products.filter((p) => p.stock < 5).length;
-
-  const Card = ({ title, value, color, icon }) => (
+function SummaryCard({ title, value, color, icon }) {
+  return (
     <Paper
       sx={{
         p: 3,
@@ -48,11 +44,41 @@ export default function InventorySummary({ products }) {
       </div>
     </Paper>
   );
+}
+
+export default function InventorySummary({ products = [], purchases = [] }) {
+  const totalItems = products.length;
+  const totalQty = products.reduce((sum, p) => sum + Number(p.stock || 0), 0);
+  const totalValue = products.reduce(
+    (sum, p) => sum + Number(p.price || 0) * Number(p.stock || 0),
+    0
+  );
+  const lowStock = products.filter((p) => {
+    const stock = Number(p.stock || 0);
+    return stock > 0 && stock < 10;
+  }).length;
+
+  const totalPurchases = purchases.length;
+  const purchaseValue = purchases.reduce((sum, purchase) => {
+    const total = Number(purchase.totalAmount);
+
+    if (Number.isFinite(total)) {
+      return sum + total;
+    }
+
+    const itemsTotal = (purchase.items || []).reduce(
+      (itemSum, item) =>
+        itemSum + Number(item.qty || 0) * Number(item.price || 0),
+      0
+    );
+
+    return sum + itemsTotal;
+  }, 0);
 
   return (
-    <Grid container spacing={3} sx={{ mt: 1 }} >
-      <Grid item xs={12} md={3} sx={{width:200}}>
-        <Card
+    <Grid container spacing={3} sx={{ mt: 1 }}>
+      <Grid item xs={12} md={3}>
+        <SummaryCard
           title="Products"
           value={totalItems}
           color="#1976d2"
@@ -60,8 +86,8 @@ export default function InventorySummary({ products }) {
         />
       </Grid>
 
-      <Grid item xs={12} md={3} sx={{width:200}}>
-        <Card
+      <Grid item xs={12} md={3}>
+        <SummaryCard
           title="Total Qty"
           value={totalQty}
           color="#2e7d32"
@@ -69,21 +95,39 @@ export default function InventorySummary({ products }) {
         />
       </Grid>
 
-      <Grid item xs={12} md={3} >
-        <Card
+      <Grid item xs={12} md={3}>
+        <SummaryCard
           title="Inventory Value"
-          value={`₹${totalValue}`}
+          value={`Rs ${totalValue.toLocaleString()}`}
           color="#9c27b0"
           icon={<CurrencyRupeeIcon />}
         />
       </Grid>
 
-      <Grid item xs={12} md={3} sx={{width:200}}>
-        <Card
+      <Grid item xs={12} md={3}>
+        <SummaryCard
           title="Low Stock"
           value={lowStock}
           color="#d32f2f"
           icon={<WarningIcon />}
+        />
+      </Grid>
+
+      <Grid item xs={12} md={3}>
+        <SummaryCard
+          title="Purchases"
+          value={totalPurchases}
+          color="#00838f"
+          icon={<ShoppingBagIcon />}
+        />
+      </Grid>
+
+      <Grid item xs={12} md={3}>
+        <SummaryCard
+          title="Purchase Value"
+          value={`Rs ${purchaseValue.toLocaleString()}`}
+          color="#ef6c00"
+          icon={<CurrencyRupeeIcon />}
         />
       </Grid>
     </Grid>
