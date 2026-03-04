@@ -4,12 +4,14 @@ import {
   Button,
   Paper,
   Typography,
+  Stack,
 } from "@mui/material";
 
 export default function CustomerForm({
   form,
   onChange,
   onSubmit,
+  onCancel,
   isEdit,
 }) {
   return (
@@ -83,10 +85,18 @@ export default function CustomerForm({
           />
         </Grid>
 
-        <Grid item xs={12} textAlign="right">
-          <Button variant="contained" onClick={onSubmit}>
-            {isEdit ? "Update Customer" : "Add Customer"}
-          </Button>
+        <Grid item xs={12}>
+          <Stack direction="row" spacing={2} justifyContent="flex-end">
+            <Button variant="contained" onClick={onSubmit}>
+              {isEdit ? "Update Customer" : "Add Customer"}
+            </Button>
+
+            {isEdit && (
+              <Button variant="outlined" color="secondary" onClick={onCancel}>
+                Cancel
+              </Button>
+            )}
+          </Stack>
         </Grid>
       </Grid>
     </Paper>
