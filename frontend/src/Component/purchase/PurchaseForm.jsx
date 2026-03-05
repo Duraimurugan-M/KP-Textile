@@ -1,169 +1,234 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import {
   Grid,
   TextField,
   Button,
   Typography,
   IconButton,
-  Autocomplete,
+  Autocomplete
 } from "@mui/material";
+
 import AddIcon from "@mui/icons-material/Add";
 import DeleteIcon from "@mui/icons-material/Delete";
 
 const emptyRow = () => ({
-  productId: "",
-  qty: "",
-  price: "",
-  supplierId: "",
+  productId:"",
+  qty:"",
+  price:"",
+  supplierId:""
 });
 
 export default function PurchaseForm({
-  products = [],
-  vendors = [],
+  products=[],
+  vendors=[],
   onSubmit,
-  editData,
-}) {
-  const [rows, setRows] = useState([emptyRow()]);
+  editData
+}){
 
-  useEffect(() => {
-    if (editData) {
+  const [rows,setRows] = useState([emptyRow()]);
+
+  const clampWidthCh = (len, min = 24, max = 46) =>
+    `${Math.min(Math.max(len, min), max)}ch`;
+
+  const productFieldWidth = useMemo(() => {
+    const maxLen = products.reduce((m, p) => {
+      const label = `${p.name} (${p.productCode || ""})`;
+      return Math.max(m, label.length);
+    }, "Product".length);
+    return clampWidthCh(maxLen + 4);
+  }, [products]);
+
+  const supplierFieldWidth = useMemo(() => {
+    const maxLen = vendors.reduce((m, v) => {
+      const label = `${v.name} (${v.mobile})`;
+      return Math.max(m, label.length);
+    }, "Supplier".length);
+    return clampWidthCh(maxLen + 4);
+  }, [vendors]);
+
+  useEffect(()=>{
+
+    if(editData){
+
       setRows(
-        editData.items.map((item) => ({
-          productId: item.product?._id || item.productId,
-          qty: item.qty,
-          price: item.price,
-          supplierId: editData.supplier?._id,
+
+        editData.items.map((item)=>({
+
+          productId:item.product?._id,
+          qty:item.qty,
+          price:item.price,
+          supplierId:editData.supplier?._id
+
         }))
+
       );
+
     }
-  }, [editData]);
 
-  const change = (i, e) => {
-    const updated = [...rows];
-    updated[i] = { ...updated[i], [e.target.name]: e.target.value };
+  },[editData]);
+
+  const change=(i,e)=>{
+
+    const updated=[...rows];
+
+    updated[i]={...updated[i],[e.target.name]:e.target.value};
+
     setRows(updated);
+
   };
 
-  const addRow = () => setRows([...rows, emptyRow()]);
+  const addRow=()=>setRows([...rows,emptyRow()]);
 
-  const removeRow = (i) => {
-    const filtered = rows.filter((_, index) => index !== i);
-    setRows(filtered.length ? filtered : [emptyRow()]);
+  const removeRow=(i)=>{
+
+    const filtered = rows.filter((_,index)=>index!==i);
+
+    setRows(filtered.length?filtered:[emptyRow()]);
+
   };
 
-  const submit = (e) => {
+  const submit=(e)=>{
+
     e.preventDefault();
 
     const valid = rows.filter(
-      (r) => r.productId && r.qty && r.price && r.supplierId
+      (r)=>r.productId && r.qty && r.price && r.supplierId
     );
 
-    if (!valid.length) {
-      alert("Please fill all fields");
+    if(!valid.length){
+
+      alert("Fill all fields");
+
       return;
+
     }
 
     onSubmit({
-      supplier: valid[0].supplierId,
-      items: valid.map((r) => ({
-        product: r.productId,
-        qty: Number(r.qty),
-        price: Number(r.price),
-      })),
+
+      supplier:valid[0].supplierId,
+
+      items:valid.map((r)=>({
+
+        product:r.productId,
+        qty:Number(r.qty),
+        price:Number(r.price)
+
+      }))
+
     });
 
     setRows([emptyRow()]);
+
   };
 
-  return (
+  return(
+
     <>
+
       <Typography variant="h6" mb={2}>
         Add Multiple Purchases
       </Typography>
 
       <form onSubmit={submit}>
-        {rows.map((r, i) => (
-          <Grid container spacing={2} key={i} sx={{ mb: 2 }}>
-            <Grid item xs={12} md={4}>
+
+        {rows.map((r,i)=>(
+
+          <Grid container spacing={2} key={i} sx={{mb:2}}>
+
+            <Grid size={{ xs: 12, md: "auto" }}>
+
               <Autocomplete
+                sx={{ width: { xs: "100%", md: productFieldWidth }, maxWidth: "100%" }}
                 options={products}
-                getOptionLabel={(option) =>
-                  `${option.name} (${option.productCode || ""})`
-                }
-                value={products.find((p) => p._id === r.productId) || null}
-                onChange={(event, newValue) =>
-                  change(i, {
-                    target: {
-                      name: "productId",
-                      value: newValue?._id || "",
-                    },
+                getOptionLabel={(p)=>`${p.name} (${p.productCode || ""})`}
+                value={products.find(p=>p._id===r.productId) || null}
+                onChange={(e,v)=>
+                  change(i,{
+                    target:{
+                      name:"productId",
+                      value:v?._id || ""
+                    }
                   })
                 }
-                renderInput={(params) => (
-                  <TextField {...params} label="Product" fullWidth />
+                renderInput={(params)=>(
+                  <TextField {...params} label="Product" fullWidth/>
                 )}
               />
+
             </Grid>
 
-            <Grid item xs={12} md={2}>
+            <Grid size={{ xs: 12, md: 2 }}>
+
               <TextField
                 label="Qty"
                 name="qty"
                 type="number"
                 fullWidth
                 value={r.qty}
-                onChange={(e) => change(i, e)}
+                onChange={(e)=>change(i,e)}
               />
+
             </Grid>
 
-            <Grid item xs={12} md={2}>
+            <Grid size={{ xs: 12, md: 2 }}>
+
               <TextField
                 label="Price"
                 name="price"
                 type="number"
                 fullWidth
                 value={r.price}
-                onChange={(e) => change(i, e)}
+                onChange={(e)=>change(i,e)}
               />
+
             </Grid>
 
-            <Grid item xs={12} md={4}>
+            <Grid size={{ xs: 12, md: "auto" }}>
+
               <Autocomplete
+                sx={{ width: { xs: "100%", md: supplierFieldWidth }, maxWidth: "100%" }}
                 options={vendors}
-                getOptionLabel={(option) =>
-                  `${option.name} (${option.mobile || ""})`
-                }
-                value={vendors.find((v) => v._id === r.supplierId) || null}
-                onChange={(event, newValue) =>
-                  change(i, {
-                    target: {
-                      name: "supplierId",
-                      value: newValue?._id || "",
-                    },
+                getOptionLabel={(v)=>`${v.name} (${v.mobile})`}
+                value={vendors.find(v=>v._id===r.supplierId) || null}
+                onChange={(e,v)=>
+                  change(i,{
+                    target:{
+                      name:"supplierId",
+                      value:v?._id || ""
+                    }
                   })
                 }
-                renderInput={(params) => (
-                  <TextField {...params} label="Supplier" fullWidth />
+                renderInput={(params)=>(
+                  <TextField {...params} label="Vendor" fullWidth/>
                 )}
               />
+
             </Grid>
 
-            <Grid item xs={12} md={1}>
-              <IconButton color="error" onClick={() => removeRow(i)}>
-                <DeleteIcon />
+            <Grid size={{ xs: 12, md: "auto" }}>
+
+              <IconButton color="error" onClick={()=>removeRow(i)}>
+                <DeleteIcon/>
               </IconButton>
+
             </Grid>
+
           </Grid>
+
         ))}
 
-        <Button startIcon={<AddIcon />} onClick={addRow} sx={{ mr: 2 }}>
+        <Button startIcon={<AddIcon/>} onClick={addRow} sx={{mr:2}}>
           Add Row
         </Button>
 
         <Button variant="contained" type="submit">
-          {editData ? "Update" : "Save All"}
+          Save All
         </Button>
+
       </form>
+
     </>
+
   );
+
 }

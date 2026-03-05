@@ -1,25 +1,24 @@
 import { Outlet } from "react-router-dom";
 import Sidebar from "../Component/Sidebar.jsx";
-// import TopBar from "../Pages/TopBar/TopBar.jsx";
 
-const AdminOutlet = () => {
+const HomeLayout = () => {
   return (
-    <div className="h-screen flex flex-col overflow-hidden">
-      {/* Top Bar */}
-      {/* <TopBar /> */}
+    <div className="h-screen flex overflow-hidden">
 
-      {/* Body */}
-      <div className="flex flex-1 overflow-hidden pt-[65px] md:pt-0">
-        {/* Sidebar */}
-        <Sidebar />
+      {/* Sidebar */}
+      <Sidebar />
 
-        {/* Main Content */}
-        <div className="flex-1 overflow-auto bg-gray-50 p-4">
+      {/* Main Content */}
+      <div className="flex-1 overflow-auto bg-gray-50 w-full">
+
+        <div className="w-full px-6 py-4">
           <Outlet />
         </div>
+
       </div>
+
     </div>
   );
 };
 
-export default AdminOutlet;
+export default HomeLayout;

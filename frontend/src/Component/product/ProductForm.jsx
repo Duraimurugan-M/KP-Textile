@@ -240,7 +240,7 @@ useEffect(() => {
             <Grid item xs={12} md={1}>
 
               <TextField
-                label="Stock"
+                label="Opening Stock"
                 name="stock"
                 type="number"
                 fullWidth
