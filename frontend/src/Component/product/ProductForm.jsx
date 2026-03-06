@@ -237,19 +237,6 @@ useEffect(() => {
 
             </Grid>
 
-            <Grid item xs={12} md={1}>
-
-              <TextField
-                label="Opening Stock"
-                name="stock"
-                type="number"
-                fullWidth
-                value={row.stock}
-                onChange={(e) => handleChange(index, e)}
-              />
-
-            </Grid>
-
             <Grid item xs={12} md={1.5}>
 
               <TextField
@@ -281,6 +268,19 @@ useEffect(() => {
                 label="Description"
                 name="description"
                 value={row.description}
+                onChange={(e) => handleChange(index, e)}
+              />
+
+            </Grid>
+
+            <Grid item xs={12} md={1}>
+
+              <TextField
+                label="Opening Stock"
+                name="stock"
+                type="number"
+                fullWidth
+                value={row.stock}
                 onChange={(e) => handleChange(index, e)}
               />
 

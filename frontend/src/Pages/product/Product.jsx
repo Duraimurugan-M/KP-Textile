@@ -26,6 +26,7 @@ export default function ProductPage() {
   const [editId,setEditId] = useState(null);
 
   const formRef = useRef(null);
+  const fileInputRef = useRef(null);
 
   /* FETCH PRODUCTS */
 
@@ -84,7 +85,9 @@ export default function ProductPage() {
   /* CLEAR SELECTION */
 
   const clearSelection = ()=>{
+
     setSelectedProducts([]);
+
   };
 
   /* UPDATE COPIES */
@@ -139,8 +142,10 @@ export default function ProductPage() {
   /* CANCEL EDIT */
 
   const cancelEdit = ()=>{
+
     setEditProduct(null);
     setEditId(null);
+
   };
 
   /* BULK EXCEL UPLOAD */
@@ -148,8 +153,11 @@ export default function ProductPage() {
   const uploadExcel = async()=>{
 
     if(!excelFile){
+
       toast.warning("Choose Excel file first");
+
       return;
+
     }
 
     const formData = new FormData();
@@ -157,106 +165,177 @@ export default function ProductPage() {
 
     try{
 
-      await customFetch.post(
+      const res = await customFetch.post(
         "/products/upload-excel",
         formData,
         {headers:{ "Content-Type":"multipart/form-data" }}
       );
 
-      toast.success("Excel uploaded successfully");
+      toast.success(res.data?.message || "Excel uploaded successfully");
 
       setExcelFile(null);
 
+      if(fileInputRef.current){
+        fileInputRef.current.value="";
+      }
+
       fetchProducts();
 
-    }catch{
+    }catch(error){
 
-      toast.error("Excel upload failed");
+      const message =
+        error.response?.data?.message ||
+        "Upload failed";
+
+      toast.error(message);
 
     }
 
   };
 
   const clearFile = ()=>{
+
     setExcelFile(null);
+
+    if(fileInputRef.current){
+      fileInputRef.current.value="";
+    }
+
   };
 
   /* PRINT BARCODES */
 
-  const printBarcodes = ()=>{
+const printBarcodes = () => {
 
-    if(!selectedProducts.length){
-      toast.warning("Select products first");
-      return;
-    }
+  if (!selectedProducts.length) {
+    toast.warning("Select products first");
+    return;
+  }
 
-    const printWindow = window.open("", "_blank");
+  const printWindow = window.open("", "_blank");
 
-    let html = "";
+  let html = "";
 
-    selectedProducts.forEach((p)=>{
+  selectedProducts.forEach((p) => {
 
-      const barcodeElement =
+    const barcodeElement =
       document.getElementById(`barcode-${p._id}`);
 
-      const barcodeSVG = barcodeElement?.innerHTML || "";
+    const barcodeSVG = barcodeElement?.innerHTML || "";
 
-      const copies = Number(p.copies || 1);
+    const copies = Number(p.copies || 1);
 
-      for(let i=0;i<copies;i++){
+    for (let i = 0; i < copies; i++) {
 
-        html += `
-        <div class="label">
-          <div class="shop"><b>KP Textile</b></div>
-          <div class="name">${p.name}</div>
-          <div class="price">MRP ₹${p.price}</div>
+      html += `
+      <div class="label">
+
+        <div class="shop">KP Textile</div>
+
+        <div class="barcode">
           ${barcodeSVG}
-        </div>`;
-      }
+        </div>
 
-    });
+        <div class="code">${p.productCode}</div>
 
-    printWindow.document.write(`
-    <html>
-    <head>
-    <style>
+        <div class="bottom">
+          <span class="name">${p.name}</span>
+          <span class="price">₹${p.price}</span>
+        </div>
 
-    @page{ margin:0 }
-
-    body{
-      width:100mm;
-      display:grid;
-      grid-template-columns:50mm 50mm;
-      grid-auto-rows:25mm;
-      margin:0;
+      </div>`;
     }
 
-    .label{
-      width:50mm;
-      height:25mm;
-      border:1px solid black;
-      display:flex;
-      flex-direction:column;
-      align-items:center;
-      justify-content:center;
-      font-family:Arial;
-    }
+  });
 
-    svg{
-      width:40mm;
-      height:12mm;
-    }
+  printWindow.document.write(`
+  <html>
+  <head>
 
-    </style>
-    </head>
-    <body>${html}</body>
-    </html>`);
+  <style>
 
-    printWindow.document.close();
+  @page{
+    margin:0;
+  }
 
-    setTimeout(()=>{ printWindow.print(); },500);
+  body{
+    width:100mm;
+    margin:0;
+    display:grid;
+    grid-template-columns:50mm 50mm;
+    grid-auto-rows:25mm;
+    font-family:Arial, Helvetica, sans-serif;
+  }
 
-  };
+  .label{
+    width:50mm;
+    height:25mm;
+    border:1px solid black;
+    box-sizing:border-box;
+    padding:1.5mm;
+    display:flex;
+    flex-direction:column;
+    justify-content:space-between;
+  }
+
+  .shop{
+    width:100%;
+    text-align:center;
+    font-weight:bold;
+    font-size:11px;
+  }
+
+  .barcode{
+    display:flex;
+    justify-content:center;
+  }
+
+  .barcode svg{
+    width:46mm;
+    height:12mm;
+  }
+
+  .code{
+    text-align:center;
+    font-size:8px;
+    font-weight:bold;
+  }
+
+  .bottom{
+    display:flex;
+    justify-content:space-between;
+    font-size:9px;
+  }
+
+  .name{
+    max-width:33mm;
+    overflow:hidden;
+    white-space:nowrap;
+  }
+
+  .price{
+    font-weight:bold;
+  }
+
+  </style>
+
+  </head>
+
+  <body>
+
+  ${html}
+
+  </body>
+  </html>
+  `);
+
+  printWindow.document.close();
+
+  setTimeout(() => {
+    printWindow.print();
+  }, 500);
+
+};
 
   /* SEARCH */
 
@@ -264,64 +343,43 @@ export default function ProductPage() {
     p.name?.toLowerCase().includes(search.toLowerCase())
   );
 
-  return(
-
-    <Container maxWidth={false} sx={{mt:4}}>
-
-      <Typography variant="h4">
-        Product Management
-      </Typography>
+  return (
+    <Container maxWidth={false} sx={{ mt: 4 }}>
+      <Typography variant="h4">Product Management</Typography>
 
       {/* BULK UPLOAD */}
 
-      <Paper sx={{
-        p:3,
-        mt:3,
-        border:"2px solid #999",
-        background:"#fafafa"
-      }}>
+      <Paper
+        sx={{ p: 3, mt: 3, border: "2px solid #999", background: "#fafafa" }}
+      >
+        <Typography variant="h6">Bulk Upload Products</Typography>
 
-        <Typography variant="h6">
-          Bulk Upload Products
-        </Typography>
-
-        <Box sx={{mt:2}}>
-
+        <Box sx={{ mt: 2 }}>
           <input
+            ref={fileInputRef}
             type="file"
             accept=".xlsx,.xls"
-            onChange={(e)=>setExcelFile(e.target.files[0])}
+            onChange={(e) => setExcelFile(e.target.files[0])}
             style={{
-              padding:"10px",
-              border:"2px dashed #999",
-              borderRadius:"6px"
+              padding: "10px",
+              border: "2px dashed #999",
+              borderRadius: "6px",
             }}
           />
 
-          <Button
-            variant="contained"
-            sx={{ml:2}}
-            onClick={uploadExcel}
-          >
+          <Button variant="contained" sx={{ ml: 2 }} onClick={uploadExcel}>
             Upload
           </Button>
 
-          <Button
-            variant="outlined"
-            sx={{ml:1}}
-            onClick={clearFile}
-          >
+          <Button variant="outlined" sx={{ ml: 1 }} onClick={clearFile}>
             Clear
           </Button>
-
         </Box>
-
       </Paper>
 
       {/* PRODUCT FORM */}
 
-      <Paper sx={{p:3,mt:3}} ref={formRef}>
-
+      <Paper sx={{ p: 3, mt: 3 }} ref={formRef}>
         <ProductForm
           editProduct={editProduct}
           editId={editId}
@@ -330,127 +388,107 @@ export default function ProductPage() {
         />
 
         {editId && (
-
-          <Box sx={{mt:2}}>
-
-            <Button
-              variant="outlined"
-              color="error"
-              onClick={cancelEdit}
-            >
+          <Box sx={{ mt: 2 }}>
+            <Button variant="outlined" color="error" onClick={cancelEdit}>
               Cancel Edit
             </Button>
-
           </Box>
-
         )}
-
       </Paper>
 
-      {/* SEARCH + BUTTONS */}
+      {/* SEARCH */}
 
-      <Grid container spacing={2} sx={{mt:2}}>
-
+      <Grid container spacing={2} sx={{ mt: 2 }}>
         <Grid item xs={6}>
           <TextField
             fullWidth
             label="Search Product"
-            onChange={(e)=>setSearch(e.target.value)}
+            onChange={(e) => setSearch(e.target.value)}
           />
         </Grid>
 
         <Grid item xs={6} textAlign="right">
-
-          <Button
-            variant="outlined"
-            sx={{mr:1}}
-            onClick={clearSelection}
-          >
+          <Button variant="outlined" sx={{ mr: 1 }} onClick={clearSelection}>
             Clear Selected
           </Button>
 
-          <Button
-            variant="contained"
-            onClick={printBarcodes}
-          >
+          <Button variant="contained" onClick={printBarcodes}>
             Print Barcode
           </Button>
-
         </Grid>
-
       </Grid>
 
-      {/* COPIES PANEL */}
+      {/* BARCODE COPIES */}
 
-      {selectedProducts.length>0 &&(
-
-        <Paper sx={{
-          p:2,
-          mt:2,
-          border:"2px solid #999",
-          background:"#fafafa"
-        }}>
-
+      {selectedProducts.length > 0 && (
+        <Paper
+          sx={{
+            p: 2,
+            mt: 2,
+            border: "2px solid #999",
+            background: "#fafafa",
+          }}
+        >
           <Typography variant="subtitle1" mb={1}>
             Barcode Copies
           </Typography>
 
-          {selectedProducts.map((p,index)=>(
-
+          {selectedProducts.map((p, index) => (
             <Box
               key={p._id}
               sx={{
-                display:"flex",
-                alignItems:"center",
-                gap:2,
-                mb:1,
-                border:"1px solid #ccc",
-                p:1,
-                borderRadius:1
+                display: "flex",
+                alignItems: "center",
+                gap: 2,
+                mb: 1,
+                border: "1px solid #ccc",
+                p: 1,
+                borderRadius: 1,
               }}
             >
-
-              <strong>{index+1}.</strong>
+              <strong>{index + 1}.</strong>
 
               {p.productCode}
 
               <input
-                type="number"
-                min="1"
+                type="text"
                 value={p.copies}
-                onChange={(e)=>updateCopies(p._id,e.target.value)}
+                onChange={(e) => {
+                  const val = e.target.value;
+
+                  if (val === "" || /^[0-9]+$/.test(val)) {
+                    updateCopies(p._id, val);
+                  }
+                }}
+                onBlur={(e) => {
+                  if (e.target.value === "") {
+                    updateCopies(p._id, 1);
+                  }
+                }}
                 style={{
-                  width:"60px",
-                  padding:"4px",
-                  border:"1px solid #aaa"
+                  width: "60px",
+                  padding: "4px",
+                  border: "1px solid #aaa",
                 }}
               />
-
             </Box>
-
           ))}
-
         </Paper>
-
       )}
 
       {/* PRODUCT LIST */}
 
-      <Paper sx={{p:3,mt:3}}>
-
+      <Paper sx={{ p: 3, mt: 3 }}>
         <ProductList
           products={filteredProducts}
-          selected={selectedProducts.map(p=>p._id)}
+          selected={selectedProducts.map((p) => p._id)}
           toggleSelect={toggleSelect}
           toggleSelectAll={toggleSelectAll}
           deleteProduct={deleteProduct}
           updateProduct={updateProduct}
         />
-
       </Paper>
-
     </Container>
-
   );
 
 }

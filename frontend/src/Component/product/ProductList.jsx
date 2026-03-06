@@ -34,9 +34,18 @@ export default function ProductList({
         Product List
       </Typography>
 
-      <TableContainer sx={{overflowX:{xs:"auto",lg:"hidden"}}}>
+      <TableContainer sx={{overflowX:"auto"}}>
 
-        <Table size="small" sx={{width:"100%"}}>
+        <Table
+          size="small"
+          sx={{
+            width:"100%",
+            "& th,& td":{
+              padding:"6px 8px",
+              fontSize:"13px"
+            }
+          }}
+        >
 
           <TableHead>
 
@@ -58,7 +67,16 @@ export default function ProductList({
               <TableCell>Stock</TableCell>
               <TableCell>Code</TableCell>
               <TableCell>HSN</TableCell>
-              <TableCell>Description</TableCell>
+
+              <TableCell sx={{
+                maxWidth:120,
+                overflow:"hidden",
+                textOverflow:"ellipsis",
+                whiteSpace:"nowrap"
+              }}>
+                Description
+              </TableCell>
+
               <TableCell>Barcode</TableCell>
               <TableCell align="center">Actions</TableCell>
 
@@ -72,15 +90,16 @@ export default function ProductList({
 
               const isSelected = selected.includes(p._id);
 
-              return(
-
+              return (
                 <TableRow key={p._id} hover>
 
                   <TableCell>
+
                     <Checkbox
                       checked={isSelected}
                       onChange={()=>toggleSelect(p)}
                     />
+
                   </TableCell>
 
                   <TableCell>{i+1}</TableCell>
@@ -92,7 +111,15 @@ export default function ProductList({
                   <TableCell>{p.stock}</TableCell>
                   <TableCell>{p.productCode}</TableCell>
                   <TableCell>{p.hsnCode}</TableCell>
-                  <TableCell>{p.description}</TableCell>
+
+                  <TableCell sx={{
+                    maxWidth:120,
+                    overflow:"hidden",
+                    textOverflow:"ellipsis",
+                    whiteSpace:"nowrap"
+                  }}>
+                    {p.description}
+                  </TableCell>
 
                   <TableCell>
 
@@ -102,7 +129,8 @@ export default function ProductList({
                         value={p.productCode}
                         width={1}
                         height={35}
-                        fontSize={10}
+                        displayValue={false}
+                        margin={0}
                       />
 
                     </div>
@@ -135,7 +163,6 @@ export default function ProductList({
                   </TableCell>
 
                 </TableRow>
-
               );
 
             })}

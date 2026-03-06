@@ -283,17 +283,17 @@ export const uploadProductsFromExcel = async (req, res) => {
       });
     }
 
-    const formatted = data.map((row) => ({
-      name: row.name,
-      productCode: row.productCode,
-      hsnCode: row.hsnCode,
-      category: row.category,
-      fabric: row.fabric,
-      color: row.color,
-      price: Number(row.price),
-      stock: Number(row.stock),
-      description: row.description || "",
-    }));
+const formatted = data.map((row) => ({
+  name: row["Product Name"],
+  category: row["Category"],
+  fabric: row["Fabric"],
+  color: row["Color"],
+  price: Number(row["Price"]),
+  productCode: row["Product Code"],
+  hsnCode: row["HSN Code"],
+  description: row["Description"] || "",
+  stock: Number(row["Opening Stock"]),
+}));
 
     const inserted = await Product.insertMany(formatted);
 

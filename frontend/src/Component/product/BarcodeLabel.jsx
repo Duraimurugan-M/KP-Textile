@@ -53,7 +53,6 @@ const printBarcode = async () => {
 
   return (
     <Box sx={{ mt: 3 }}>
-
       <Box
         id="barcode-label"
         sx={{
@@ -62,43 +61,31 @@ const printBarcode = async () => {
           border: "1px solid #000",
           padding: "2px",
           textAlign: "center",
-          background: "#fff"
+          background: "#fff",
         }}
       >
         <Typography fontSize={8} fontWeight="bold">
           KP Textile
         </Typography>
 
-        <Typography fontSize={7}>
-          {product.name}
-        </Typography>
+        <Typography fontSize={7}>{product.name}</Typography>
 
-        <Typography fontSize={7}>
-          MRP ₹{product.price}
-        </Typography>
+        <Typography fontSize={7}>MRP ₹{product.price}</Typography>
 
         <Barcode
           value={product.productCode}
-          width={1}
-          height={20}
+          width={2}
+          height={60}
           displayValue={false}
           margin={0}
         />
 
-        <Typography fontSize={7}>
-          {product.productCode}
-        </Typography>
-
+        <Typography fontSize={7}>{product.productCode}</Typography>
       </Box>
 
-      <Button
-        sx={{ mt: 2 }}
-        variant="contained"
-        onClick={printBarcode}
-      >
+      <Button sx={{ mt: 2 }} variant="contained" onClick={printBarcode}>
         Print Barcode
       </Button>
-
     </Box>
   );
 }
