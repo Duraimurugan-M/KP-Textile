@@ -8,31 +8,42 @@ import {
   TableBody,
   TableContainer,
   Button,
-  Dialog,
-  DialogTitle,
-  DialogContent,
   Stack,
+  TextField,
 } from "@mui/material";
-import { useState } from "react";
 
 export default function PurchaseList({
   purchases = [],
   products = [],
   onDelete,
+  search,
+  setSearch,
+  sort,
+  setSort,
+  page,
+  setPage,
+  limit,
+  total,
 }) {
-  const [open, setOpen] = useState(false);
-  const [selected, setSelected] = useState(null);
+  const getSupplierName = (purchase) => {
+    if (purchase?.supplier && typeof purchase.supplier === "object") {
+      return purchase.supplier.name || "Unknown";
+    }
+
+    if (purchase?.supplierName) {
+      return purchase.supplierName;
+    }
+
+    return "Unknown";
+  };
 
   const getProductName = (item) => {
-    if (item.product?.name) return item.product.name;
+    if (item?.product && typeof item.product === "object") {
+      return item.product.name || "Unknown";
+    }
 
     const id = item.product || item.productId;
     return products.find((p) => (p._id || p.id) === id)?.name || "Unknown";
-  };
-
-  const view = (purchase) => {
-    setSelected(purchase);
-    setOpen(true);
   };
 
   const handleDelete = async (id) => {
@@ -42,17 +53,48 @@ export default function PurchaseList({
     if (!confirmed) return;
 
     await onDelete?.(id);
-
-    if (selected?._id === id || selected?.id === id) {
-      setOpen(false);
-      setSelected(null);
-    }
   };
 
   return (
     <Paper sx={{ p: 3 }}>
-      <Stack direction="row" justifyContent="space-between" alignItems="center" mb={2}>
+      <Stack
+        direction="row"
+        spacing={2}
+        justifyContent="space-between"
+        mb={2}
+      >
         <Typography variant="h6">Purchase History</Typography>
+
+        <Stack direction="row" spacing={2}>
+          <TextField
+            size="small"
+            placeholder="Search"
+            value={search}
+            onChange={(e) => {
+              setPage(1);
+              setSearch(e.target.value);
+            }}
+          />
+
+          <TextField
+            select
+            size="small"
+            value={sort}
+            onChange={(e) => {
+              setPage(1);
+              setSort(e.target.value);
+            }}
+            SelectProps={{ native: true }}
+          >
+            <option value="">None</option>
+            <option value="supplier">Supplier A-Z</option>
+            <option value="-supplier">Supplier Z-A</option>
+            <option value="-createdAt">Newest</option>
+            <option value="createdAt">Oldest</option>
+            <option value="totalItems">Items Low-High</option>
+            <option value="-totalItems">Items High-Low</option>
+          </TextField>
+        </Stack>
       </Stack>
 
       <TableContainer sx={{ overflowX: "auto" }}>
@@ -62,6 +104,9 @@ export default function PurchaseList({
               <TableCell>#</TableCell>
               <TableCell>Date</TableCell>
               <TableCell>Supplier</TableCell>
+              <TableCell>Products</TableCell>
+              <TableCell>Qty</TableCell>
+              <TableCell>Price</TableCell>
               <TableCell>Total Items</TableCell>
               <TableCell align="right">Action</TableCell>
             </TableRow>
@@ -70,7 +115,7 @@ export default function PurchaseList({
           <TableBody>
             {purchases.length === 0 && (
               <TableRow>
-                <TableCell colSpan={5} align="center">
+                <TableCell colSpan={8} align="center">
                   No purchases found
                 </TableCell>
               </TableRow>
@@ -81,29 +126,58 @@ export default function PurchaseList({
 
               return (
                 <TableRow key={id}>
-                  <TableCell>{index + 1}</TableCell>
+                  <TableCell>{(page - 1) * limit + index + 1}</TableCell>
+
                   <TableCell>
                     {purchase.createdAt
                       ? new Date(purchase.createdAt).toLocaleDateString()
-                      : purchase.date}
+                      : purchase.date || "-"}
                   </TableCell>
+
+                  <TableCell>{getSupplierName(purchase)}</TableCell>
+
                   <TableCell>
-                    {purchase.supplier?.name || purchase.supplierName || "Unknown"}
+                    {purchase.items?.length ? (
+                      purchase.items.map((item, idx) => (
+                        <div key={idx}>{getProductName(item)}</div>
+                      ))
+                    ) : (
+                      "-"
+                    )}
                   </TableCell>
+
+                  <TableCell>
+                    {purchase.items?.length ? (
+                      purchase.items.map((item, idx) => (
+                        <div key={idx}>{item.qty}</div>
+                      ))
+                    ) : (
+                      "-"
+                    )}
+                  </TableCell>
+
+                  <TableCell>
+                    {purchase.items?.length ? (
+                      purchase.items.map((item, idx) => (
+                        <div key={idx}>
+                          Rs {Number(item.price || 0).toLocaleString()}
+                        </div>
+                      ))
+                    ) : (
+                      "-"
+                    )}
+                  </TableCell>
+
                   <TableCell>{purchase.items?.length || 0}</TableCell>
+
                   <TableCell align="right">
-                    <Stack direction="row" justifyContent="flex-end" spacing={1}>
-                      <Button size="small" onClick={() => view(purchase)}>
-                        View
-                      </Button>
-                      <Button
-                        size="small"
-                        color="error"
-                        onClick={() => handleDelete(id)}
-                      >
-                        Delete
-                      </Button>
-                    </Stack>
+                    <Button
+                      size="small"
+                      color="error"
+                      onClick={() => handleDelete(id)}
+                    >
+                      Delete
+                    </Button>
                   </TableCell>
                 </TableRow>
               );
@@ -112,31 +186,28 @@ export default function PurchaseList({
         </Table>
       </TableContainer>
 
-      {selected && (
-        <Dialog open={open} onClose={() => setOpen(false)} fullWidth>
-          <DialogTitle>Purchase Details</DialogTitle>
-          <DialogContent>
-            <Table size="small">
-              <TableHead>
-                <TableRow>
-                  <TableCell>Product</TableCell>
-                  <TableCell>Qty</TableCell>
-                  <TableCell>Price</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {selected.items?.map((item, index) => (
-                  <TableRow key={index}>
-                    <TableCell>{getProductName(item)}</TableCell>
-                    <TableCell>{item.qty}</TableCell>
-                    <TableCell>{`Rs ${Number(item.price || 0).toLocaleString()}`}</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </DialogContent>
-        </Dialog>
-      )}
+      <Stack
+        direction="row"
+        spacing={2}
+        justifyContent="flex-end"
+        mt={2}
+      >
+        <Button
+          disabled={page === 1}
+          onClick={() => setPage(page - 1)}
+        >
+          Prev
+        </Button>
+
+        <Typography>Page {page}</Typography>
+
+        <Button
+          disabled={page * limit >= total}
+          onClick={() => setPage(page + 1)}
+        >
+          Next
+        </Button>
+      </Stack>
     </Paper>
   );
 }

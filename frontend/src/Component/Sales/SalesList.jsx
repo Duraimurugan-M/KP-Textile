@@ -1,195 +1,3 @@
-// import {
-//   Paper,
-//   Typography,
-//   Table,
-//   TableHead,
-//   TableRow,
-//   TableCell,
-//   TableBody,
-//   TableContainer,
-//   Button,
-//   Dialog,
-//   DialogTitle,
-//   DialogContent,
-//   Grid,
-//   Divider,
-//   useTheme,
-//   useMediaQuery,
-// } from "@mui/material";
-// import { useState } from "react";
-
-// export default function SalesList({ sales }) {
-//   const [open, setOpen] = useState(false);
-//   const [selected, setSelected] = useState(null);
-
-//   const theme = useTheme();
-//   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
-
-//   const viewSale = (sale) => {
-//     setSelected(sale);
-//     setOpen(true);
-//   };
-
-//   const totalQty = (sale) =>
-//     sale.items.reduce((sum, i) => sum + i.qty, 0);
-
-//   return (
-//     <>
-//       <Paper sx={{ p: 3 }}>
-//         <Typography variant="h6" mb={2}>
-//           Sales History
-//         </Typography>
-
-//         <TableContainer sx={{ overflowX: "auto" }}>
-//           <Table size="small" sx={{ minWidth: 900 }}>
-//             <TableHead>
-//               <TableRow>
-//                 <TableCell>Date</TableCell>
-//                 <TableCell>Customer</TableCell>
-//                 <TableCell align="center">Items</TableCell>
-//                 <TableCell align="center">Total Qty</TableCell>
-//                 <TableCell align="right">Grand Total</TableCell>
-//                 <TableCell align="center">Bill</TableCell>
-//                 <TableCell align="center">Action</TableCell>
-//               </TableRow>
-//             </TableHead>
-
-//             <TableBody>
-//               {sales.length === 0 && (
-//                 <TableRow>
-//                   <TableCell colSpan={6} align="center">
-//                     No sales found
-//                   </TableCell>
-//                 </TableRow>
-//               )}
-
-//               {sales.map((s) => (
-//                 <TableRow key={s.id} hover>
-//                   <TableCell>{s.date}</TableCell>
-//                   <TableCell>{s.customer}</TableCell>
-//                   <TableCell align="center">{s.items.length}</TableCell>
-//                   <TableCell align="center">{totalQty(s)}</TableCell>
-//                   <TableCell align="right">
-//                     ₹{s.grandTotal.toFixed(2)}
-//                   </TableCell>
-//                   <TableCell align="center">
-//   <Button
-//     size="small"
-//     variant="outlined"
-//     onClick={() => viewSale(s)}
-//   >
-//     Bill
-//   </Button>
-// </TableCell>
-
-// <TableCell align="center">
-//   <Button size="small" onClick={() => viewSale(s)}>
-//     View
-//   </Button>
-// </TableCell>
-
-//                 </TableRow>
-//               ))}
-//             </TableBody>
-//           </Table>
-//         </TableContainer>
-//       </Paper>
-
-//       {/* 🔍 SALE DETAILS MODAL */}
-//       {selected && (
-//         <Dialog
-//           open={open}
-//           onClose={() => setOpen(false)}
-//           fullWidth
-//           maxWidth="lg"
-//         >
-//           <DialogTitle>Sale Details</DialogTitle>
-
-//           <DialogContent dividers>
-//             {/* HEADER INFO */}
-//             <Grid container spacing={2} mb={2}>
-//               <Grid item xs={12} md={4}>
-//                 <Typography>
-//                   <b>Customer:</b> {selected.customer}
-//                 </Typography>
-//               </Grid>
-//               <Grid item xs={12} md={4}>
-//                 <Typography>
-//                   <b>Date:</b> {selected.date}
-//                 </Typography>
-//               </Grid>
-//               <Grid item xs={12} md={4}>
-//                 <Typography>
-//                   <b>GST Mode:</b>{" "}
-//                   {selected.gstMode === "with"
-//                     ? "With GST"
-//                     : "Without GST"}
-//                 </Typography>
-//               </Grid>
-//             </Grid>
-
-//             <Divider sx={{ mb: 2 }} />
-
-//             {/* ✅ RESPONSIVE TABLE CONTAINER */}
-//             <TableContainer
-//               sx={{
-//                 overflowX: "auto",
-//                 maxWidth: "100%",
-//               }}
-//             >
-//               <Table
-//                 size="small"
-//                 sx={{ minWidth: isMobile ? 700 : 1000 }}
-//               >
-//                 <TableHead>
-//                   <TableRow>
-//                     <TableCell>Product</TableCell>
-//                     <TableCell align="center">Qty</TableCell>
-//                     <TableCell align="right">Price</TableCell>
-//                     <TableCell align="right">CGST</TableCell>
-//                     <TableCell align="right">SGST</TableCell>
-//                     <TableCell align="right">IGST</TableCell>
-//                     <TableCell align="right">Line Total</TableCell>
-//                   </TableRow>
-//                 </TableHead>
-
-//                 <TableBody>
-//                   {selected.items.map((i, idx) => (
-//                     <TableRow key={idx}>
-//                       <TableCell>{i.productName}</TableCell>
-//                       <TableCell align="center">{i.qty}</TableCell>
-//                       <TableCell align="right">₹{i.price}</TableCell>
-//                       <TableCell align="right">
-//                         ₹{i.cgstAmount.toFixed(2)}
-//                       </TableCell>
-//                       <TableCell align="right">
-//                         ₹{i.sgstAmount.toFixed(2)}
-//                       </TableCell>
-//                       <TableCell align="right">
-//                         ₹{i.igstAmount.toFixed(2)}
-//                       </TableCell>
-//                       <TableCell align="right">
-//                         ₹{i.total.toFixed(2)}
-//                       </TableCell>
-//                     </TableRow>
-//                   ))}
-//                 </TableBody>
-//               </Table>
-//             </TableContainer>
-
-//             <Divider sx={{ my: 2 }} />
-
-//             <Typography align="right" variant="h6">
-//               Grand Total: ₹{selected.grandTotal.toFixed(2)}
-//             </Typography>
-//           </DialogContent>
-//         </Dialog>
-//       )}
-//     </>
-//   );
-// }
-
-
 import {
   Paper,
   Table,
@@ -197,11 +5,24 @@ import {
   TableRow,
   TableCell,
   TableBody,
-  Typography
+  Typography,
+  Stack,
+  TextField,
+  Button,
+  TableContainer,
 } from "@mui/material";
 
-export default function SalesList({ sales }) {
-
+export default function SalesList({
+  sales = [],
+  search,
+  setSearch,
+  sort,
+  setSort,
+  page,
+  setPage,
+  limit,
+  total,
+}) {
   const formatDate = (date) => {
     const d = new Date(date);
     return d.toLocaleString();
@@ -210,12 +31,9 @@ export default function SalesList({ sales }) {
   const getItemNames = (items) => {
     return items
       .map((i) => {
-
         const name = i.product?.name || "Product";
         const code = i.product?.productCode || "";
-
         return `${name} (${code})`;
-
       })
       .join(", ");
   };
@@ -225,80 +43,149 @@ export default function SalesList({ sales }) {
   };
 
   return (
+    <Paper sx={{ p: 3 }}>
+      <Stack
+        direction="row"
+        spacing={2}
+        justifyContent="space-between"
+        mb={2}
+      >
+        <Typography variant="h6">
+          Sales History
+        </Typography>
 
-    <Paper sx={{ p:3 }}>
+        <Stack direction="row" spacing={2}>
+          <TextField
+            size="small"
+            placeholder="Search"
+            value={search}
+            onChange={(e) => {
+              setPage(1);
+              setSearch(e.target.value);
+            }}
+          />
 
-      <Typography variant="h6" mb={2}>
-        Sales History
-      </Typography>
+          <TextField
+            select
+            size="small"
+            value={sort}
+            onChange={(e) => {
+              setPage(1);
+              setSort(e.target.value);
+            }}
+            SelectProps={{ native: true }}
+          >
+            <option value="">None</option>
+            <option value="-createdAt">Newest</option>
+            <option value="createdAt">Oldest</option>
+            <option value="customer">Customer A-Z</option>
+            <option value="-customer">Customer Z-A</option>
+            <option value="grossTotal">Gross Total Low-High</option>
+            <option value="-grossTotal">Gross Total High-Low</option>
+            <option value="grandTotal">Grand Total Low-High</option>
+            <option value="-grandTotal">Grand Total High-Low</option>
+            <option value="qty">Qty Low-High</option>
+            <option value="-qty">Qty High-Low</option>
+          </TextField>
+        </Stack>
+      </Stack>
 
-      <Table>
-
-        <TableHead>
-
-          <TableRow>
-
-            <TableCell>Bill</TableCell>
-            <TableCell>Date</TableCell>
-            <TableCell>Customer</TableCell>
-            <TableCell>Items</TableCell>
-            <TableCell>Qty</TableCell>
-            <TableCell>GST</TableCell>
-            <TableCell>Gross Total</TableCell>
-            <TableCell>Grand Total</TableCell>
-
-          </TableRow>
-
-        </TableHead>
-
-        <TableBody>
-
-          {sales.map((sale,index)=>(
-
-            <TableRow key={sale._id}>
-
-              <TableCell>
-                #{index+1}
-              </TableCell>
-
-              <TableCell>
-                {formatDate(sale.createdAt)}
-              </TableCell>
-
-              <TableCell>
-                {sale.customer?.name || "Walk-in"}
-              </TableCell>
-
-              <TableCell sx={{ maxWidth:300 }}>
-                {getItemNames(sale.items)}
-              </TableCell>
-
-              <TableCell>
-                {getTotalQty(sale.items)}
-              </TableCell>
-
-              <TableCell>
-                {sale.gstMode === "without" ? "Bill" : "GST"}
-              </TableCell>
-
-              <TableCell>
-                ₹{sale.grossTotal}
-              </TableCell>
-
-              <TableCell>
-                <b>₹{sale.grandTotal}</b>
-              </TableCell>
-
+      <TableContainer sx={{ overflowX: "auto" }}>
+        <Table
+          size="small"
+          sx={{
+            minWidth: 900,
+            "& th,& td": {
+              padding: "6px 8px",
+              fontSize: "13px",
+            },
+          }}
+        >
+          <TableHead>
+            <TableRow>
+              <TableCell>Bill</TableCell>
+              <TableCell>Date</TableCell>
+              <TableCell>Customer</TableCell>
+              <TableCell>Items</TableCell>
+              <TableCell>Qty</TableCell>
+              <TableCell>GST</TableCell>
+              <TableCell>Gross Total</TableCell>
+              <TableCell>Grand Total</TableCell>
             </TableRow>
+          </TableHead>
 
-          ))}
+          <TableBody>
+            {sales.length === 0 && (
+              <TableRow>
+                <TableCell colSpan={8} align="center">
+                  No sales found
+                </TableCell>
+              </TableRow>
+            )}
 
-        </TableBody>
+            {sales.map((sale, index) => (
+              <TableRow key={sale._id}>
+                <TableCell>
+                  #{(page - 1) * limit + index + 1}
+                </TableCell>
 
-      </Table>
+                <TableCell>
+                  {formatDate(sale.createdAt)}
+                </TableCell>
 
+                <TableCell>
+                  {sale.customer?.name || "Walk-in"}
+                </TableCell>
+
+                <TableCell sx={{ maxWidth: 300 }}>
+                  {getItemNames(sale.items)}
+                </TableCell>
+
+                <TableCell>
+                  {getTotalQty(sale.items)}
+                </TableCell>
+
+                <TableCell>
+                  {sale.gstMode === "without" ? "Bill" : "GST"}
+                </TableCell>
+
+                <TableCell>
+                  ₹{sale.grossTotal}
+                </TableCell>
+
+                <TableCell>
+                  <b>₹{sale.grandTotal}</b>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </TableContainer>
+
+      <Stack
+        direction="row"
+        spacing={2}
+        justifyContent="flex-end"
+        mt={2}
+      >
+        <Button
+          disabled={page === 1}
+          onClick={() => setPage(page - 1)}
+        >
+          Prev
+        </Button>
+
+        <Typography>
+          Page {page}
+        </Typography>
+
+        <Button
+          disabled={page * limit >= total}
+          onClick={() => setPage(page + 1)}
+        >
+          Next
+        </Button>
+      </Stack>
     </Paper>
-
   );
-
 }

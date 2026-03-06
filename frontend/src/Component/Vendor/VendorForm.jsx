@@ -5,13 +5,66 @@ import {
   Paper,
   Typography,
   Stack,
+  Autocomplete,
 } from "@mui/material";
+
+const indianStates = [
+  "Andhra Pradesh",
+  "Arunachal Pradesh",
+  "Assam",
+  "Bihar",
+  "Chhattisgarh",
+  "Goa",
+  "Gujarat",
+  "Haryana",
+  "Himachal Pradesh",
+  "Jharkhand",
+  "Karnataka",
+  "Kerala",
+  "Madhya Pradesh",
+  "Maharashtra",
+  "Manipur",
+  "Meghalaya",
+  "Mizoram",
+  "Nagaland",
+  "Odisha",
+  "Punjab",
+  "Rajasthan",
+  "Sikkim",
+  "Tamil Nadu",
+  "Telangana",
+  "Tripura",
+  "Uttar Pradesh",
+  "Uttarakhand",
+  "West Bengal",
+  "Andaman and Nicobar Islands",
+  "Chandigarh",
+  "Dadra and Nagar Haveli and Daman and Diu",
+  "Delhi",
+  "Jammu and Kashmir",
+  "Ladakh",
+  "Lakshadweep",
+  "Puducherry",
+];
+
+/* width calculator */
+const clampWidthCh = (len, min = 20, max = 44) =>
+  `${Math.min(Math.max(len, min), max)}ch`;
+
+/* find second longest state name */
+const sortedLengths = indianStates
+  .map((state) => state.length)
+  .sort((a, b) => b - a);
+
+const secondLargestLength = sortedLengths[1] || sortedLengths[0];
+
+const stateFieldWidth = clampWidthCh(secondLargestLength + 4);
 
 export default function VendorForm({
   form,
   onChange,
   onSubmit,
-  onCancel,   // ✅ added
+  onCancel,
   isEdit,
 }) {
   return (
@@ -21,6 +74,7 @@ export default function VendorForm({
       </Typography>
 
       <Grid container spacing={2}>
+        {/* Vendor Name */}
         <Grid item xs={12} md={6}>
           <TextField
             fullWidth
@@ -32,6 +86,7 @@ export default function VendorForm({
           />
         </Grid>
 
+        {/* Mobile */}
         <Grid item xs={12} md={6}>
           <TextField
             fullWidth
@@ -43,6 +98,7 @@ export default function VendorForm({
           />
         </Grid>
 
+        {/* Email */}
         <Grid item xs={12} md={6}>
           <TextField
             fullWidth
@@ -53,6 +109,7 @@ export default function VendorForm({
           />
         </Grid>
 
+        {/* GST */}
         <Grid item xs={12} md={6}>
           <TextField
             fullWidth
@@ -63,16 +120,35 @@ export default function VendorForm({
           />
         </Grid>
 
-        <Grid item xs={12} md={6}>
-          <TextField
-            fullWidth
-            label="State"
-            name="state"
-            value={form.state}
-            onChange={onChange}
+        {/* State Dropdown */}
+        <Grid item xs={12} md="auto">
+          <Autocomplete
+            options={indianStates}
+            value={form.state || null}
+            onChange={(event, newValue) => {
+              onChange({
+                target: {
+                  name: "state",
+                  value: newValue || "",
+                },
+              });
+            }}
+            sx={{
+              width: { xs: "100%", md: stateFieldWidth },
+              maxWidth: "100%",
+            }}
+            renderInput={(params) => (
+              <TextField
+                {...params}
+                label="State"
+                name="state"
+                fullWidth
+              />
+            )}
           />
         </Grid>
 
+        {/* Address */}
         <Grid item xs={12}>
           <TextField
             fullWidth
@@ -85,13 +161,10 @@ export default function VendorForm({
           />
         </Grid>
 
-        {/* ✅ BUTTON SECTION */}
+        {/* Buttons */}
         <Grid item xs={12} textAlign="right">
           <Stack direction="row" spacing={2} justifyContent="flex-end">
-            <Button
-              variant="contained"
-              onClick={onSubmit}
-            >
+            <Button variant="contained" onClick={onSubmit}>
               {isEdit ? "Update Vendor" : "Add Vendor"}
             </Button>
 
