@@ -126,7 +126,7 @@ const handleLogin = async () => {
       toast.success("Login successful ✅");
       setTimeout(() => {
         navigate("/app");
-      }, 1000);
+      }, 500);
     }
   } catch (error) {
     toast.error(error.response?.data?.message || "Login failed ❌");
