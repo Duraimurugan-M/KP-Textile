@@ -10,7 +10,9 @@ import {
   TextField,
   Button,
   TableContainer,
+  Checkbox,
 } from "@mui/material";
+import { useNavigate } from "react-router-dom";
 
 export default function SalesList({
   sales = [],
@@ -22,7 +24,12 @@ export default function SalesList({
   setPage,
   limit,
   total,
+  billMode,
+  setBillMode,
+  onOpenInvoice,
 }) {
+  const navigate = useNavigate();
+
   const formatDate = (date) => {
     const d = new Date(date);
     return d.toLocaleString();
@@ -40,6 +47,14 @@ export default function SalesList({
 
   const getTotalQty = (items) => {
     return items.reduce((sum, i) => sum + i.qty, 0);
+  };
+
+  const openInvoice = (sale) => {
+    if (onOpenInvoice) {
+      onOpenInvoice(sale);
+      return;
+    }
+    navigate("/app/bill", { state: { sale } });
   };
 
   return (
@@ -103,12 +118,18 @@ export default function SalesList({
         >
           <TableHead>
             <TableRow>
-              <TableCell>Bill</TableCell>
+              <TableCell>
+                <Checkbox
+                  size="small"
+                  checked={billMode}
+                  onChange={(e) => setBillMode?.(e.target.checked)}
+                />
+              </TableCell>
               <TableCell>Date</TableCell>
               <TableCell>Customer</TableCell>
               <TableCell>Items</TableCell>
               <TableCell>Qty</TableCell>
-              <TableCell>GST</TableCell>
+              <TableCell>Invoice</TableCell>
               <TableCell>Gross Total</TableCell>
               <TableCell>Grand Total</TableCell>
             </TableRow>
@@ -146,7 +167,13 @@ export default function SalesList({
                 </TableCell>
 
                 <TableCell>
-                  {sale.gstMode === "without" ? "Bill" : "GST"}
+                  <Button
+                    size="small"
+                    variant="outlined"
+                    onClick={() => openInvoice(sale)}
+                  >
+                    Bill
+                  </Button>
                 </TableCell>
 
                 <TableCell>

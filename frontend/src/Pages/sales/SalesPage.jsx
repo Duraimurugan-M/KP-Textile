@@ -1,14 +1,17 @@
 import { useEffect, useState, useMemo } from "react";
 import { Typography, Stack, Box } from "@mui/material";
+import { useNavigate } from "react-router-dom";
 import SalesForm from "../../Component/Sales/SalesForm";
 import SalesList from "../../Component/Sales/SalesList";
 import customFetch from "../../utils/customFetch";
 import { toast } from "react-toastify";
 
 export default function SalesModule() {
+  const navigate = useNavigate();
   const [products, setProducts] = useState([]);
   const [sales, setSales] = useState([]);
   const [customers, setCustomers] = useState([]);
+  const [billMode, setBillMode] = useState(false);
 
   const [search, setSearch] = useState("");
   const [sort, setSort] = useState("");
@@ -41,6 +44,10 @@ export default function SalesModule() {
     } catch (error) {
       toast.error(error.response?.data?.msg || "Sale failed");
     }
+  };
+
+  const handleOpenInvoice = (sale) => {
+    navigate("/app/bill", { state: { sale } });
   };
 
   const processedSales = useMemo(() => {
@@ -124,6 +131,7 @@ export default function SalesModule() {
           products={products}
           customers={customers}
           onSale={handleSale}
+          billMode={billMode}
         />
 
         <SalesList
@@ -136,6 +144,9 @@ export default function SalesModule() {
           setPage={setPage}
           limit={limit}
           total={total}
+          billMode={billMode}
+          setBillMode={setBillMode}
+          onOpenInvoice={handleOpenInvoice}
         />
       </Stack>
     </Box>

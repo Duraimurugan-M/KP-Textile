@@ -1,478 +1,419 @@
+import { useEffect, useMemo, useState } from "react";
+import { useLocation } from "react-router-dom";
+import customFetch from "../../utils/customFetch";
 
+const SHOP = {
+  code: "YS",
+  name: "YUVIRAA SILKS",
+  gstin: "33HBCPB7699A1ZR",
+  phones: ["88380 57339", "95433 82043"],
+  email: "yviraa339@gmail.com",
+  address1: "6/541, Gandhi Nagar, Near Jay Matriculation School,",
+  address2: "Allikuttai (PO), Salem - 636 003.",
+  tagline: "Handloom Cloth Merchants",
+  bank: {
+    accountNo: "1186010000001344",
+    branch: "SALEM - MAIN",
+    ifsc: "KVBL0001186",
+  },
+};
 
-// import React from 'react';
+const fmtMoney = (value) =>
+  new Intl.NumberFormat("en-IN", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(Number(value || 0));
 
-// /**
-//  * A4 dimensions in pixels at 96 DPI: 794px x 1123px.
-//  * This component maintains the exact design while restructuring the billing info section.
-//  */
-// const Invoice = () => {
-//   return (
-//     <div className="bg-gray-200 min-h-screen py-10 flex justify-center print:p-0 print:bg-white">
-//       {/* A4 Page Container */}
-//       <div 
-//         className="bg-white shadow-2xl print:shadow-none overflow-hidden"
-//         style={{
-//           width: '210mm',
-//           height: '297mm',
-//           padding: '10mm',
-//           boxSizing: 'border-box',
-//           fontFamily: '"Times New Roman", Times, serif'
-//         }}
-//       >
-//         {/* Main Border Box */}
-//         <div className="border-[1.5px] border-black h-full flex flex-col text-[12px] leading-tight text-black">
-          
-//           {/* Header Section */}
-//           <div className="flex border-b-[1.5px] border-black">
-//             {/* Top Left: GSTIN */}
-//             <div className="w-1/3 p-2">
-//               <span className="font-bold">GSTIN: 33AFGPY5715D2ZF</span>
-//               <div className="mt-2 text-[10px]">
-//                 <img 
-//                   src="https://upload.wikimedia.org/wikipedia/en/8/80/Lord_Ganesha_Icon.png" 
-//                   alt="Logo" 
-//                   className="w-12 opacity-80 grayscale"
-//                   onError={(e) => e.target.style.display='none'}
-//                 />
-//               </div>
-//             </div>
+const pad = (n, width = 2) => String(n).padStart(width, "0");
 
-//             {/* Top Center: Company Info */}
-//             <div className="w-1/3 text-center py-2">
-//               <div className="inline-block border-b border-black font-bold px-4 mb-1 uppercase tracking-widest">Tax Invoice</div>
-//               <h1 className="text-2xl font-bold tracking-tight">K.P. TEXTILES</h1>
-//               <p className="italic font-bold text-[11px] mb-1">Handloom Cloth Merchants</p>
-//               <p className="text-[10px]">6/541, Gandhi Nagar, Veeranam Main Road,</p>
-//               <p className="text-[10px]">Allikuttai(PO), SALEM - 636 003. (TN)</p>
-//             </div>
+const isSameMonth = (left, right) =>
+  left.getFullYear() === right.getFullYear() &&
+  left.getMonth() === right.getMonth();
 
-//             {/* Top Right: Contact */}
-//             <div className="w-1/3 text-right p-2 text-[11px] leading-normal font-bold">
-//               <p>CELL: (+91) 94864 08083</p>
-//               <p>(+91) 95431 82043</p>
-//               <p>Phone No: 04272914083</p>
-//             </div>
-//           </div>
+const buildInvoiceNo = (date, serial) => {
+  const yy = pad(date.getFullYear() % 100, 2);
+  const mm = pad(date.getMonth() + 1, 2);
+  const seq = pad(serial, 3);
+  return `${SHOP.code}${yy}${mm}${seq}`;
+};
 
-//           {/* Billing Info Section - Restructured with separate columns */}
-//           <div className="flex border-b-[1.5px] border-black">
-//             {/* 1. TO Details (Restored to original) */}
-//             <div className="w-[35%] border-r-[1.5px] border-black p-2">
-//               <p className="font-bold mb-1 text-[12px]">TO: M/S SRI SHARADHAA SILKS,</p>
-//               <p className="uppercase text-[11px]">AMMAPET, SALEM-636003.</p>
-//               <p className="text-[11px]">Mobile No: 9443697161.</p>
-//               <p className="font-bold mt-1 text-[10px]">GSTIN / UIN: 33DQDPS3400J2ZZ /</p>
-//               <p className="text-[10px]">State Name * Code : Tamil Nadu - 33.</p>
-//             </div>
+const ONES = [
+  "",
+  "One",
+  "Two",
+  "Three",
+  "Four",
+  "Five",
+  "Six",
+  "Seven",
+  "Eight",
+  "Nine",
+  "Ten",
+  "Eleven",
+  "Twelve",
+  "Thirteen",
+  "Fourteen",
+  "Fifteen",
+  "Sixteen",
+  "Seventeen",
+  "Eighteen",
+  "Nineteen",
+];
 
-//             {/* 2. Buyer Details Column (New Column) */}
-//             <div className="w-[25%] border-r-[1.5px] border-black p-2 relative">
-//               <span className="absolute top-0 right-2 text-[9px] italic opacity-60">buyer</span>
-//               <div className="mt-2 space-y-1 font-bold text-[11px]">
-//                 <p className="text-red-700 italic text-[13px] mb-1">buyer</p>
-//                 <p>name: some name</p>
-//                 <p>Phno: 32484423</p>
-//                 <p>state: TN</p>
-//                 <p>gst no: 32372687</p>
-//               </div>
-//             </div>
+const TENS = ["", "", "Twenty", "Thirty", "Forty", "Fifty", "Sixty", "Seventy", "Eighty", "Ninety"];
 
-//             {/* 3. Invoice Meta Details */}
-//             <div className="w-[40%] text-[11px]">
-//               <div className="flex border-b border-black">
-//                 <div className="w-1/2 p-1 border-r border-black uppercase font-semibold">Reverse Charge</div>
-//                 <div className="w-1/2 p-1 text-right font-bold pr-2">No</div>
-//               </div>
-//               <div className="flex border-b border-black">
-//                 <div className="w-1/2 p-1 border-r border-black font-bold uppercase">Invoice No</div>
-//                 <div className="w-1/2 p-1 text-right font-bold pr-2 text-red-600">00198</div>
-//               </div>
-//               <div className="flex border-b border-black">
-//                 <div className="w-1/2 p-1 border-r border-black font-bold uppercase">Invoice Date</div>
-//                 <div className="w-1/2 p-1 text-right font-bold pr-2">05-02-2025</div>
-//               </div>
-//               <div className="flex border-b border-black">
-//                 <div className="w-1/2 p-1 border-r border-black font-semibold uppercase text-[10px]">Carriers</div>
-//                 <div className="w-1/2 p-1 text-right pr-2"></div>
-//               </div>
-//               <div className="flex border-b border-black">
-//                 <div className="w-1/2 p-1 border-r border-black font-semibold uppercase text-[10px]">No of Articles</div>
-//                 <div className="w-1/2 p-1 text-right pr-2 font-bold">102</div>
-//               </div>
-//               <div className="flex border-b border-black">
-//                 <div className="w-1/2 p-1 border-r border-black font-semibold uppercase text-[10px]">Way Bill No</div>
-//                 <div className="w-1/2 p-1 text-right pr-2"></div>
-//               </div>
-//               <div className="flex border-b border-black">
-//                 <div className="w-1/2 p-1 border-r border-black font-bold uppercase text-[10px]">State code</div>
-//                 <div className="w-1/2 p-1 text-right pr-2 font-bold uppercase">Tamilnadu 33</div>
-//               </div>
-//             </div>
-//           </div>
+const twoDigitsToWords = (n) => {
+  if (n < 20) return ONES[n];
+  const ten = Math.floor(n / 10);
+  const one = n % 10;
+  return `${TENS[ten]}${one ? ` ${ONES[one]}` : ""}`.trim();
+};
 
-//           {/* Table Header */}
-//           <div className="flex border-b border-black font-bold text-center text-[10px] items-stretch uppercase bg-gray-50">
-//             <div className="w-12 border-r border-black py-1">S.No</div>
-//             <div className="flex-grow border-r border-black py-1 text-left px-2">Product Description</div>
-//             <div className="w-16 border-r border-black py-1">HSN Code</div>
-//             <div className="w-16 border-r border-black py-1">Per Meter</div>
-//             <div className="w-20 border-r border-black py-1">Rate ₹</div>
-//             <div className="w-16 border-r border-black py-1">Qty</div>
-//             <div className="w-24 py-1 pr-2 text-right">Total ₹</div>
-//           </div>
+const threeDigitsToWords = (n) => {
+  const hundred = Math.floor(n / 100);
+  const rest = n % 100;
+  if (!hundred) return twoDigitsToWords(rest);
+  if (!rest) return `${ONES[hundred]} Hundred`;
+  return `${ONES[hundred]} Hundred ${twoDigitsToWords(rest)}`;
+};
 
-//           {/* Table Content */}
-//           <div className="flex-grow flex flex-col border-b border-black min-h-[400px]">
-//             {/* Item 1 */}
-//             <div className="flex border-b border-gray-200 h-10 items-center text-[11px]">
-//               <div className="w-12 border-r border-black h-full flex items-center justify-center font-bold">1</div>
-//               <div className="flex-grow border-r border-black h-full flex items-center px-2 font-bold italic">20.00 M ASHA SPCIAL SHIRTING PIECES 0</div>
-//               <div className="w-16 border-r border-black h-full flex items-center justify-center">5407</div>
-//               <div className="w-16 border-r border-black h-full flex items-center justify-center"></div>
-//               <div className="w-20 border-r border-black h-full flex items-center justify-end px-2 italic font-bold">125.00</div>
-//               <div className="w-16 border-r border-black h-full flex items-center justify-center font-bold text-[13px]">102</div>
-//               <div className="w-24 h-full flex items-center justify-end px-2 font-bold text-[13px]">12,750.00</div>
-//             </div>
+const numberToWordsIndian = (num) => {
+  const n = Math.floor(Number(num || 0));
+  if (n === 0) return "Zero";
+  const crore = Math.floor(n / 10000000);
+  const lakh = Math.floor((n % 10000000) / 100000);
+  const thousand = Math.floor((n % 100000) / 1000);
+  const hundred = n % 1000;
+  const parts = [];
+  if (crore) parts.push(`${twoDigitsToWords(crore)} Crore`);
+  if (lakh) parts.push(`${twoDigitsToWords(lakh)} Lakh`);
+  if (thousand) parts.push(`${twoDigitsToWords(thousand)} Thousand`);
+  if (hundred) parts.push(threeDigitsToWords(hundred));
+  return parts.join(" ").trim();
+};
 
-//             {/* Empty Spacer Rows */}
-//             <div className="flex-grow flex bg-white opacity-40">
-//               <div className="w-12 border-r border-black"></div>
-//               <div className="flex-grow border-r border-black"></div>
-//               <div className="w-16 border-r border-black"></div>
-//               <div className="w-16 border-r border-black"></div>
-//               <div className="w-20 border-r border-black"></div>
-//               <div className="w-16 border-r border-black"></div>
-//               <div className="w-24"></div>
-//             </div>
-//           </div>
+export default function Invoice() {
+  const { state } = useLocation();
+  const sale = state?.sale;
+  const [allSales, setAllSales] = useState([]);
+  const [allCustomers, setAllCustomers] = useState([]);
+  const [allProducts, setAllProducts] = useState([]);
 
-//           {/* Summary / Calculation Section */}
-//           <div className="flex h-52">
-//             {/* Left Footer: Totals and Words */}
-//             <div className="w-[60%] border-r-[1.5px] border-black p-2 flex flex-col justify-between">
-//               <div className="text-[11px] leading-relaxed">
-//                 <p>Total : <span className="font-bold  text-[13px]">102 QTY</span></p>
-//                 <p>Total : <span className="font-bold">0 MTRS</span></p>
-//                 <div className="mt-4">
-//                   <p className="text-[10px] italic">Invoice Total Amount (in words)</p>
-//                   <p className="font-bold uppercase text-[11px] ">Thirteen Thousand Three Hundred and Eighty Eight Rupees Only</p>
-//                 </div>
-//               </div>
+  useEffect(() => {
+    let ignore = false;
 
-//               <div className="mt-4 border-t border-dotted border-black pt-2">
-//                 <p className="font-bold underline italic text-[10px]">Terms & Conditions:</p>
-//                 <p className="text-[9px]">1. Goods once sold will not be taken back or exchanged</p>
-//                 <p className="text-[9px]">2. All disputes are subject to Salem jurisdiction</p>
-//               </div>
-//             </div>
+    const loadData = async () => {
+      try {
+        const [salesRes, customersRes, productsRes] = await Promise.all([
+          customFetch.get("sales"),
+          customFetch.get("customers"),
+          customFetch.get("products"),
+        ]);
 
-//             {/* Right Footer: Tax Calculations */}
-//             <div className="w-[40%] text-[11px] flex flex-col">
-//               <div className="flex border-b border-black">
-//                 <div className="flex-grow p-1 border-r border-black font-bold uppercase italic text-[10px]">Basic Amount</div>
-//                 <div className="w-32 p-1 text-right font-bold px-2 whitespace-nowrap">: Rs. 12,750.00</div>
-//               </div>
-//               <div className="flex border-b border-black">
-//                 <div className="flex-grow p-1 border-r border-black font-semibold uppercase text-[10px]">Add SGST 2.50 %</div>
-//                 <div className="w-32 p-1 text-right px-2">: Rs. 318.75</div>
-//               </div>
-//               <div className="flex border-b border-black">
-//                 <div className="flex-grow p-1 border-r border-black font-semibold uppercase text-[10px]">Add CGST 2.50 %</div>
-//                 <div className="w-32 p-1 text-right px-2">: Rs. 318.75</div>
-//               </div>
-//               <div className="flex border-b border-black">
-//                 <div className="flex-grow p-1 border-r border-black font-semibold uppercase text-[10px]">Add IGST 5 %</div>
-//                 <div className="w-32 p-1 text-right px-2">: Rs. </div>
-//               </div>
-//               <div className="flex border-b border-black bg-gray-50">
-//                 <div className="flex-grow p-1 border-r border-black font-bold uppercase">Tax Amount</div>
-//                 <div className="w-32 p-1 text-right font-bold px-2">: Rs. 637.50</div>
-//               </div>
-//               <div className="flex border-b border-black">
-//                 <div className="flex-grow p-1 border-r border-black font-semibold uppercase text-[10px]">Handling / Fright</div>
-//                 <div className="w-32 p-1 text-right px-2">: Rs. </div>
-//               </div>
-//               <div className="flex border-b border-black">
-//                 <div className="flex-grow p-1 border-r border-black font-bold uppercase font-bold italic ">Round Off</div>
-//                 <div className="w-32 p-1 text-right px-2 font-bold italic ">: Rs. 0.50</div>
-//               </div>
-//               <div className="flex flex-grow items-center bg-gray-100">
-//                 <div className="flex-grow p-1 h-full flex items-center border-r border-black font-black uppercase text-sm italic tracking-widest">Grand Total</div>
-//                 <div className="w-32 p-1 h-full flex items-center justify-end font-black text-sm px-2  decoration-double">: Rs. 13,388.00</div>
-//               </div>
-//             </div>
-//           </div>
+        if (ignore) return;
 
-//           {/* Final Footer: Bank Details & Signatory */}
-//           <div className="flex border-t-[1.5px] border-black bg-gray-50 h-28">
-//             <div className="w-2/3 p-2 text-[10px] font-bold leading-tight border-r border-black">
-//               <p className="underline mb-1 uppercase tracking-tight">Bank Details:</p>
-//               <p className="uppercase text-[11px]">KARUR VYSYA BANK,</p>
-//               <p>Branch : SALEM MAIN.</p>
-//               <p>IFSC : KVBL0001186,</p>
-//               <p>Acc No : 1186 135 000002755</p>
-//               <p className="mt-4 font-normal italic text-[8px]">E & O.E</p>
-//             </div>
-//             <div className="w-1/3 flex flex-col justify-between p-2 text-center">
-//               <p className="font-black text-[11px] uppercase underline decoration-double">For K.P. TEXTILES</p>
-//               <div className="mb-2 relative">
-//                 <div className="font-serif italic text-blue-800 text-lg opacity-80 mb-[-12px] transform -rotate-3 select-none">
-                  
-//                 </div>
-//                 <div className="border-t border-black pt-1 font-bold text-[9px] uppercase tracking-tighter">
-//                   Authorized Signatory
-//                 </div>
-//               </div>
-//             </div>
-//           </div>
+        setAllSales(salesRes.data?.sales || []);
+        setAllCustomers(customersRes.data?.customers || []);
+        setAllProducts(productsRes.data?.products || []);
+      } catch {
+        if (!ignore) {
+          setAllSales([]);
+          setAllCustomers([]);
+          setAllProducts([]);
+        }
+      }
+    };
 
-//         </div>
-//       </div>
-//     </div>
-//   );
-// };
+    loadData();
+    return () => {
+      ignore = true;
+    };
+  }, []);
 
-// export default Invoice;
+  const view = useMemo(() => {
+    if (!sale) return null;
 
-import React from 'react';
+    const saleDate = sale.createdAt ? new Date(sale.createdAt) : new Date();
+    const nonGst = sale.gstMode === "without";
 
-/**
- * Tax Invoice Component
- * Strictly maintains A4 layout (210mm x 297mm) 
- * Mobile Responsiveness: Horizontal scrolling to preserve exact design integrity.
- */
-const Invoice = () => {
+    const customerId =
+      typeof sale.customer === "string" ? sale.customer : sale.customer?._id;
+    const dbCustomer = allCustomers.find((c) => c._id === customerId);
+    const customer = {
+      name: sale.customer?.name || dbCustomer?.name || "Walk-in Customer",
+      mobile: sale.customer?.mobile || dbCustomer?.mobile || "-",
+      state: sale.customer?.state || dbCustomer?.state || "-",
+      gst: sale.customer?.gst || dbCustomer?.gst || "-",
+      address: sale.customer?.address || dbCustomer?.address || "-",
+    };
+
+    const items = sale.items || [];
+    const lineItems = items.map((item, idx) => {
+      const productId =
+        typeof item.product === "string" ? item.product : item.product?._id;
+      const dbProduct = allProducts.find((p) => p._id === productId);
+
+      const qty = Number(item.qty || 0);
+      const rate = Number(item.price || 0);
+      const discountRate = Number(item.discount || 0);
+      const cgstRate = Number(item.cgst || 0);
+      const sgstRate = Number(item.sgst || 0);
+      const igstRate = Number(item.igst || 0);
+
+      const base = qty * rate;
+      const discountAmount = (base * discountRate) / 100;
+      const taxable = base - discountAmount;
+      const cgstAmount = (taxable * cgstRate) / 100;
+      const sgstAmount = (taxable * sgstRate) / 100;
+      const igstAmount = (taxable * igstRate) / 100;
+      const total = Number(item.total || taxable + cgstAmount + sgstAmount + igstAmount);
+
+      return {
+        sno: idx + 1,
+        name: item.product?.name || dbProduct?.name || "Product",
+        code: item.product?.productCode || dbProduct?.productCode || "-",
+        hsn: item.product?.hsnCode || dbProduct?.hsnCode || "-",
+        qty,
+        rate,
+        discountAmount,
+        cgstAmount,
+        sgstAmount,
+        igstAmount,
+        total,
+      };
+    });
+
+    const grossTotal = Number(sale.grossTotal || 0);
+    const grandTotal = Number(sale.grandTotal || 0);
+    const qtyTotal = lineItems.reduce((s, i) => s + i.qty, 0);
+    const discountTotal = lineItems.reduce((s, i) => s + i.discountAmount, 0);
+    const cgstTotal = lineItems.reduce((s, i) => s + i.cgstAmount, 0);
+    const sgstTotal = lineItems.reduce((s, i) => s + i.sgstAmount, 0);
+    const igstTotal = lineItems.reduce((s, i) => s + i.igstAmount, 0);
+    const taxTotal = cgstTotal + sgstTotal + igstTotal;
+
+    const monthSales = allSales
+      .filter((s) => s?.createdAt && isSameMonth(new Date(s.createdAt), saleDate))
+      .sort((a, b) => {
+        const ta = new Date(a.createdAt).getTime();
+        const tb = new Date(b.createdAt).getTime();
+        if (ta !== tb) return ta - tb;
+        return String(a._id || "").localeCompare(String(b._id || ""));
+      });
+
+    const sameSaleIdx = monthSales.findIndex((s) => String(s._id) === String(sale._id));
+    const serial = sameSaleIdx >= 0 ? sameSaleIdx + 1 : 1;
+    const invoiceNo = buildInvoiceNo(saleDate, serial);
+    const amountInWords = `${numberToWordsIndian(Math.round(grandTotal))} Rupees Only`;
+
+    return {
+      saleDate,
+      nonGst,
+      customer,
+      lineItems,
+      qtyTotal,
+      grossTotal,
+      discountTotal,
+      cgstTotal,
+      sgstTotal,
+      igstTotal,
+      taxTotal,
+      grandTotal,
+      invoiceNo,
+      amountInWords,
+    };
+  }, [sale, allSales, allCustomers, allProducts]);
+
+  if (!view) {
+    return (
+      <div className="p-8">
+        <h2 className="text-xl font-bold mb-2">Invoice</h2>
+        <p>No sale selected. Open invoice from Sales History Bill button.</p>
+      </div>
+    );
+  }
+
+  const minBodyRows = 18;
+  const emptyRowsCount = Math.max(0, minBodyRows - view.lineItems.length);
+  const emptyRows = Array.from({ length: emptyRowsCount });
+
   return (
-    <div className="bg-gray-200 min-h-screen py-0 md:py-10 flex md:justify-center overflow-x-auto">
-      {/* Wrapper for Mobile: 
-          min-w-max ensures the A4 container doesn't squish on small screens,
-          preserving every single line and alignment exactly.
-      */}
-      <div className="min-w-max h-fit">
-        {/* A4 Page Container */}
-        <div 
-          className="bg-white shadow-2xl print:shadow-none overflow-hidden mx-auto"
-          style={{
-            width: '210mm',
-            height: '297mm',
-            padding: '10mm',
-            boxSizing: 'border-box',
-            fontFamily: '"Times New Roman", Times, serif'
-          }}
-        >
-          {/* Main Border Box */}
-          <div className="border-[1.5px] border-black h-full flex flex-col text-[12px] leading-tight text-black">
-            
-            {/* Header Section */}
-            <div className="flex border-b-[1.5px] border-black">
-              {/* Top Left: GSTIN */}
-              <div className="w-1/3 p-2">
-                <span className="font-bold">GSTIN: 33AFGPY5715D2ZF</span>
-                <div className="mt-2 text-[10px]">
-                  <img 
-                    src="https://upload.wikimedia.org/wikipedia/en/8/80/Lord_Ganesha_Icon.png" 
-                    alt="Logo" 
-                    className="w-12 opacity-80 grayscale"
-                    onError={(e) => e.target.style.display='none'}
-                  />
-                </div>
+    <div className="bg-gray-100 min-h-screen p-2 md:p-6 overflow-x-auto">
+      <div
+        className="mx-auto bg-white shadow-xl"
+        style={{ width: "210mm", minHeight: "297mm", fontFamily: '"Times New Roman", serif' }}
+      >
+        <div className="m-2 border border-black min-h-[280mm] flex flex-col text-[11px] font-semibold">
+          <div className="border-b border-black px-3 py-2">
+            <div className="grid grid-cols-[1fr_2fr_1fr]">
+              <div className="font-bold">{!view.nonGst ? `GSTIN: ${SHOP.gstin}` : ""}</div>
+              <div className="text-center leading-tight">
+                <div className="font-bold tracking-wide">{view.nonGst ? "INVOICE" : "TAX INVOICE"}</div>
+                <div className="text-[32px] font-black leading-8 tracking-wide">{SHOP.name}</div>
+                <div className="font-bold">{SHOP.tagline}</div>
+                <div>{SHOP.address1}</div>
+                <div>{SHOP.address2}</div>
               </div>
-
-              {/* Top Center: Company Info */}
-              <div className="w-1/3 text-center py-2">
-                <div className="inline-block border-b border-black font-bold px-4 mb-1 uppercase tracking-widest">Tax Invoice</div>
-                <h1 className="text-2xl font-bold tracking-tight">K.P. TEXTILES</h1>
-                <p className="italic font-bold text-[11px] mb-1">Handloom Cloth Merchants</p>
-                <p className="text-[10px]">6/541, Gandhi Nagar, Veeranam Main Road,</p>
-                <p className="text-[10px]">Allikuttai(PO), SALEM - 636 003. (TN)</p>
+              <div className="text-right leading-tight">
+                <div>CELL: {SHOP.phones[0]}</div>
+                <div>{SHOP.phones[1]}</div>
+                <div>Email: {SHOP.email}</div>
               </div>
+            </div>
+          </div>
 
-              {/* Top Right: Contact */}
-              <div className="w-1/3 text-right p-2 text-[11px] leading-normal font-bold">
-                <p>CELL: (+91) 94864 08083</p>
-                <p>(+91) 95431 82043</p>
-                <p>Phone No: 04272914083</p>
+          <div className="border-b border-black grid grid-cols-[1.25fr_1fr]">
+            <div className="border-r border-black grid grid-cols-[1fr_1fr]">
+              <div className="border-r border-black p-2">
+                <div className="font-bold">TO:</div>
+                <div className="font-bold">{view.customer.name}</div>
+                <div>Mobile No: {view.customer.mobile}</div>
+                {!view.nonGst && <div>GSTIN / UIN: {view.customer.gst}</div>}
+                <div>State Name * Code: {view.customer.state}</div>
+                <div>{view.customer.address}</div>
+              </div>
+              <div className="p-2">
+                <div className="italic">Buyer</div>
+                <div>{view.customer.name}</div>
+                <div>Ph: {view.customer.mobile}</div>
+                {!view.nonGst && <div>GST: {view.customer.gst}</div>}
               </div>
             </div>
 
-            {/* Billing Info Section */}
-            <div className="flex border-b-[1.5px] border-black">
-              {/* 1. TO Details */}
-              <div className="w-[35%] border-r-[1.5px] border-black p-2">
-                <p className="font-bold mb-1 text-[12px]">TO: M/S SRI SHARADHAA SILKS,</p>
-                <p className="uppercase text-[11px]">AMMAPET, SALEM-636003.</p>
-                <p className="text-[11px]">Mobile No: 9443697161.</p>
-                <p className="font-bold mt-1 text-[10px]">GSTIN / UIN: 33DQDPS3400J2ZZ /</p>
-                <p className="text-[10px]">State Name * Code : Tamil Nadu - 33.</p>
+            <div>
+              {[
+                ["Reverse Charge", "No"],
+                ["Invoice No", view.invoiceNo],
+                ["Invoice Date", view.saleDate.toLocaleDateString("en-GB")],
+                ["Carriers", ""],
+                ["No of Articles", String(view.qtyTotal)],
+                ["Way Bill No", ""],
+                ["State code", "TAMILNADU 33"],
+              ].map(([k, v], idx, arr) => (
+                <div
+                  key={k}
+                  className={`grid grid-cols-[1fr_110px] ${idx < arr.length - 1 ? "border-b border-black" : ""}`}
+                >
+                  <div className="border-r border-black p-1 uppercase font-bold">{k}</div>
+                  <div className="p-1 text-center font-bold">{v}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <table className="w-full table-fixed">
+            <thead>
+              <tr className="border-b border-black uppercase text-[10px] font-bold">
+                <th className="w-[45px] border-r border-black px-1 py-1">S.No</th>
+                <th className="border-r border-black px-1 py-1 text-left">Product Description</th>
+                <th className="w-[65px] border-r border-black px-1 py-1">HSN</th>
+                <th className="w-[60px] border-r border-black px-1 py-1">Per Mtr</th>
+                <th className="w-[75px] border-r border-black px-1 py-1">Rate Rs</th>
+                <th className="w-[55px] border-r border-black px-1 py-1">Qty</th>
+                <th className="w-[90px] px-1 py-1 text-right">Total Rs</th>
+              </tr>
+            </thead>
+            <tbody>
+              {view.lineItems.map((item) => (
+                <tr key={`${item.code}-${item.sno}`} className="border-b border-black/60">
+                  <td className="border-r border-black px-1 py-[2px] text-center">{item.sno}</td>
+                  <td className="border-r border-black px-1 py-[2px]">{item.name}</td>
+                  <td className="border-r border-black px-1 py-[2px] text-center">{item.hsn}</td>
+                  <td className="border-r border-black px-1 py-[2px] text-center">-</td>
+                  <td className="border-r border-black px-1 py-[2px] text-right">{fmtMoney(item.rate)}</td>
+                  <td className="border-r border-black px-1 py-[2px] text-center">{item.qty}</td>
+                  <td className="px-1 py-[2px] text-right">{fmtMoney(item.total)}</td>
+                </tr>
+              ))}
+
+              {emptyRows.map((_, idx) => (
+                <tr key={`empty-${idx}`} className="border-b border-black/40">
+                  <td className="border-r border-black px-1 py-[2px]">&nbsp;</td>
+                  <td className="border-r border-black px-1 py-[2px]">&nbsp;</td>
+                  <td className="border-r border-black px-1 py-[2px]">&nbsp;</td>
+                  <td className="border-r border-black px-1 py-[2px]">&nbsp;</td>
+                  <td className="border-r border-black px-1 py-[2px]">&nbsp;</td>
+                  <td className="border-r border-black px-1 py-[2px]">&nbsp;</td>
+                  <td className="px-1 py-[2px]">&nbsp;</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+
+          <div className="mt-auto border-t border-black grid grid-cols-[1fr_1fr]">
+            <div className="border-r border-black p-2 flex flex-col justify-between">
+              <div>
+                <div>Total : <span className="font-bold">{view.qtyTotal} QTY</span></div>
+                <div>Total : <span className="font-bold">0 MTRS</span></div>
+                <div className="mt-2">
+                  <div className="text-[10px]">Invoice Total Amount (in words)</div>
+                  <div className="font-semibold uppercase">{view.amountInWords}</div>
+                </div>
               </div>
 
-              {/* 2. Buyer Details Column */}
-              <div className="w-[25%] border-r-[1.5px] border-black p-2 relative">
-                <span className="absolute top-0 right-2 text-[9px] italic opacity-60">buyer</span>
-                <div className="mt-2 space-y-1 font-bold text-[11px]">
-                  <p className="text-red-700 italic text-[13px] mb-1">buyer</p>
-                  <p>name: some name</p>
-                  <p>Phno: 32484423</p>
-                  <p>state: TN</p>
-                  <p>gst no: 32372687</p>
-                </div>
+              <div className="mt-3">
+                <div className="font-bold underline">Terms & Conditions:</div>
+                <div className="font-normal">1. Goods once sold will not be taken back or exchanged</div>
+                <div className="font-normal">2. All disputes are subject to Salem jurisdiction</div>
               </div>
 
-              {/* 3. Invoice Meta Details */}
-              <div className="w-[40%] text-[11px]">
-                <div className="flex border-b border-black">
-                  <div className="w-1/2 p-1 border-r border-black uppercase font-semibold">Reverse Charge</div>
-                  <div className="w-1/2 p-1 text-right font-bold pr-2">No</div>
+              {!view.nonGst && (
+                <div className="mt-3">
+                  <div className="font-bold">Bank Details:</div>
+                  <div>Account No - {SHOP.bank.accountNo}</div>
+                  <div>Branch Name - {SHOP.bank.branch}</div>
+                  <div>IFSC - {SHOP.bank.ifsc}</div>
                 </div>
-                <div className="flex border-b border-black">
-                  <div className="w-1/2 p-1 border-r border-black font-bold uppercase">Invoice No</div>
-                  <div className="w-1/2 p-1 text-right font-bold pr-2 text-red-600">00198</div>
-                </div>
-                <div className="flex border-b border-black">
-                  <div className="w-1/2 p-1 border-r border-black font-bold uppercase">Invoice Date</div>
-                  <div className="w-1/2 p-1 text-right font-bold pr-2">05-02-2025</div>
-                </div>
-                <div className="flex border-b border-black">
-                  <div className="w-1/2 p-1 border-r border-black font-semibold uppercase text-[10px]">Carriers</div>
-                  <div className="w-1/2 p-1 text-right pr-2"></div>
-                </div>
-                <div className="flex border-b border-black">
-                  <div className="w-1/2 p-1 border-r border-black font-semibold uppercase text-[10px]">No of Articles</div>
-                  <div className="w-1/2 p-1 text-right pr-2 font-bold">102</div>
-                </div>
-                <div className="flex border-b border-black">
-                  <div className="w-1/2 p-1 border-r border-black font-semibold uppercase text-[10px]">Way Bill No</div>
-                  <div className="w-1/2 p-1 text-right pr-2"></div>
-                </div>
-                <div className="flex border-b border-black">
-                  <div className="w-1/2 p-1 border-r border-black font-bold uppercase text-[10px]">State code</div>
-                  <div className="w-1/2 p-1 text-right pr-2 font-bold uppercase">Tamilnadu 33</div>
-                </div>
-              </div>
+              )}
             </div>
 
-            {/* Table Header */}
-            <div className="flex border-b border-black font-bold text-center text-[10px] items-stretch uppercase bg-gray-50">
-              <div className="w-12 border-r border-black py-1">S.No</div>
-              <div className="flex-grow border-r border-black py-1 text-left px-2">Product Description</div>
-              <div className="w-16 border-r border-black py-1">HSN Code</div>
-              <div className="w-16 border-r border-black py-1">Per Meter</div>
-              <div className="w-20 border-r border-black py-1">Rate ₹</div>
-              <div className="w-16 border-r border-black py-1">Qty</div>
-              <div className="w-24 py-1 pr-2 text-right">Total ₹</div>
-            </div>
-
-            {/* Table Content */}
-            <div className="flex-grow flex flex-col border-b border-black min-h-[400px]">
-              {/* Item 1 */}
-              <div className="flex border-b border-gray-200 h-10 items-center text-[11px]">
-                <div className="w-12 border-r border-black h-full flex items-center justify-center font-bold">1</div>
-                <div className="flex-grow border-r border-black h-full flex items-center px-2 font-bold italic">20.00 M ASHA SPCIAL SHIRTING PIECES 0</div>
-                <div className="w-16 border-r border-black h-full flex items-center justify-center">5407</div>
-                <div className="w-16 border-r border-black h-full flex items-center justify-center"></div>
-                <div className="w-20 border-r border-black h-full flex items-center justify-end px-2 italic font-bold">125.00</div>
-                <div className="w-16 border-r border-black h-full flex items-center justify-center font-bold text-[13px]">102</div>
-                <div className="w-24 h-full flex items-center justify-end px-2 font-bold text-[13px]">12,750.00</div>
+            <div className="p-2 font-bold">
+              <div className="grid grid-cols-[1fr_120px] border-b border-black/40">
+                <div className="py-1">Basic Amount</div>
+                <div className="py-1 text-right">Rs. {fmtMoney(view.grossTotal)}</div>
               </div>
-
-              {/* Empty Spacer Rows */}
-              <div className="flex-grow flex bg-white opacity-40">
-                <div className="w-12 border-r border-black"></div>
-                <div className="flex-grow border-r border-black"></div>
-                <div className="w-16 border-r border-black"></div>
-                <div className="w-16 border-r border-black"></div>
-                <div className="w-20 border-r border-black"></div>
-                <div className="w-16 border-r border-black"></div>
-                <div className="w-24"></div>
+              <div className="grid grid-cols-[1fr_120px] border-b border-black/40">
+                <div className="py-1">Discount</div>
+                <div className="py-1 text-right">Rs. {fmtMoney(view.discountTotal)}</div>
               </div>
-            </div>
-
-            {/* Summary / Calculation Section */}
-            <div className="flex h-52">
-              {/* Left Footer: Totals and Words */}
-              <div className="w-[60%] border-r-[1.5px] border-black p-2 flex flex-col justify-between">
-                <div className="text-[11px] leading-relaxed">
-                  <p>Total : <span className="font-bold  border-black text-[13px]">102 QTY</span></p>
-                  <p>Total : <span className="font-bold">0 MTRS</span></p>
-                  <div className="mt-4">
-                    <p className="text-[10px] italic">Invoice Total Amount (in words)</p>
-                    <p className="font-bold uppercase text-[11px] ">Thirteen Thousand Three Hundred and Eighty Eight Rupees Only</p>
+              {!view.nonGst && (
+                <>
+                  <div className="grid grid-cols-[1fr_120px] border-b border-black/40">
+                    <div className="py-1">ADD SGST</div>
+                    <div className="py-1 text-right">Rs. {fmtMoney(view.sgstTotal)}</div>
                   </div>
-                </div>
-
-                <div className="mt-4 border-t border-dotted border-black pt-2">
-                  <p className="font-bold underline italic text-[10px]">Terms & Conditions:</p>
-                  <p className="text-[9px]">1. Goods once sold will not be taken back or exchanged</p>
-                  <p className="text-[9px]">2. All disputes are subject to Salem jurisdiction</p>
-                </div>
+                  <div className="grid grid-cols-[1fr_120px] border-b border-black/40">
+                    <div className="py-1">ADD CGST</div>
+                    <div className="py-1 text-right">Rs. {fmtMoney(view.cgstTotal)}</div>
+                  </div>
+                  <div className="grid grid-cols-[1fr_120px] border-b border-black/40">
+                    <div className="py-1">ADD IGST</div>
+                    <div className="py-1 text-right">Rs. {fmtMoney(view.igstTotal)}</div>
+                  </div>
+                  <div className="grid grid-cols-[1fr_120px] border-b border-black/40 font-semibold">
+                    <div className="py-1">Tax Amount</div>
+                    <div className="py-1 text-right">Rs. {fmtMoney(view.taxTotal)}</div>
+                  </div>
+                </>
+              )}
+              <div className="grid grid-cols-[1fr_120px] border-b border-black/40">
+                <div className="py-1">Handling / Freight</div>
+                <div className="py-1 text-right">Rs. 0.00</div>
               </div>
-
-              {/* Right Footer: Tax Calculations */}
-              <div className="w-[40%] text-[11px] flex flex-col">
-                <div className="flex border-b border-black">
-                  <div className="flex-grow p-1 border-r border-black font-bold uppercase italic text-[10px]">Basic Amount</div>
-                  <div className="w-32 p-1 text-right font-bold px-2 whitespace-nowrap">: Rs. 12,750.00</div>
-                </div>
-                <div className="flex border-b border-black">
-                  <div className="flex-grow p-1 border-r border-black font-semibold uppercase text-[10px]">Add SGST 2.50 %</div>
-                  <div className="w-32 p-1 text-right px-2">: Rs. 318.75</div>
-                </div>
-                <div className="flex border-b border-black">
-                  <div className="flex-grow p-1 border-r border-black font-semibold uppercase text-[10px]">Add CGST 2.50 %</div>
-                  <div className="w-32 p-1 text-right px-2">: Rs. 318.75</div>
-                </div>
-                <div className="flex border-b border-black">
-                  <div className="flex-grow p-1 border-r border-black font-semibold uppercase text-[10px]">Add IGST 5 %</div>
-                  <div className="w-32 p-1 text-right px-2">: Rs. </div>
-                </div>
-                <div className="flex border-b border-black bg-gray-50">
-                  <div className="flex-grow p-1 border-r border-black font-bold uppercase">Tax Amount</div>
-                  <div className="w-32 p-1 text-right font-bold px-2">: Rs. 637.50</div>
-                </div>
-                <div className="flex border-b border-black">
-                  <div className="flex-grow p-1 border-r border-black font-semibold uppercase text-[10px]">Handling / Fright</div>
-                  <div className="w-32 p-1 text-right px-2">: Rs. </div>
-                </div>
-                <div className="flex border-b border-black">
-                  <div className="flex-grow p-1 border-r border-black font-bold uppercase font-bold italic ">Round Off</div>
-                  <div className="w-32 p-1 text-right px-2 font-bold italic ">: Rs. 0.50</div>
-                </div>
-                <div className="flex flex-grow items-center bg-gray-100">
-                  <div className="flex-grow p-1 h-full flex items-center border-r border-black font-black uppercase text-sm italic tracking-widest">Grand Total</div>
-                  <div className="w-32 p-1 h-full flex items-center justify-end font-black text-sm px-2  decoration-double">: Rs. 13,388.00</div>
+              <div className="grid grid-cols-[1fr_120px] border-b border-black/40">
+                <div className="py-1">Round Off</div>
+                <div className="py-1 text-right">Rs. 0.00</div>
+              </div>
+              <div className="grid grid-cols-[1fr_140px] mt-1 items-end gap-2">
+                <div className="text-[20px] leading-6 font-black whitespace-nowrap">Grand Total</div>
+                <div className="text-right text-[18px] leading-6 font-black whitespace-nowrap">
+                  Rs. {fmtMoney(view.grandTotal)}
                 </div>
               </div>
             </div>
-
-            {/* Final Footer: Bank Details & Signatory */}
-            <div className="flex border-t-[1.5px] border-black bg-gray-50 h-28">
-              <div className="w-2/3 p-2 text-[10px] font-bold leading-tight border-r border-black">
-                <p className="underline mb-1 uppercase tracking-tight">Bank Details:</p>
-                <p className="uppercase text-[11px]">KARUR VYSYA BANK,</p>
-                <p>Branch : SALEM MAIN.</p>
-                <p>IFSC : KVBL0001186,</p>
-                <p>Acc No : 1186 135 000002755</p>
-                <p className="mt-4 font-normal italic text-[8px]">E & O.E</p>
-              </div>
-              <div className="w-1/3 flex flex-col justify-between p-2 text-center">
-                <p className="font-black text-[11px] uppercase  decoration-double">For K.P. TEXTILES</p>
-                <div className="mb-2 relative">
-                  <div className="font-serif italic text-blue-800 text-lg opacity-80 mb-[-12px] transform -rotate-3 select-none">
-                    
-                  </div>
-                  <div className="border-t border-black pt-1 font-bold text-[9px] uppercase tracking-tighter">
-                    Authorized Signatory
-                  </div>
-                </div>
-              </div>
-            </div>
-
           </div>
         </div>
       </div>
     </div>
   );
-};
-
-export default Invoice;
+}

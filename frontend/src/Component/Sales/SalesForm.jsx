@@ -8,8 +8,6 @@ import {
   Paper,
   Divider,
   Autocomplete,
-  Checkbox,
-  FormControlLabel,
 } from "@mui/material";
 
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -27,11 +25,10 @@ const emptyRow = () => ({
   total: 0,
 });
 
-export default function SalesForm({ products, customers, onSale }) {
+export default function SalesForm({ products, customers, onSale, billMode }) {
 
   const [rows,setRows] = useState([]);
   const [customer,setCustomer] = useState(null);
-  const [billMode,setBillMode] = useState(false);
 
   const barcodeRef = useRef(null);
 
@@ -299,7 +296,6 @@ useEffect(()=>{
 
     setRows([]);
     setCustomer(null);
-    setBillMode(false);
 
   };
 
@@ -313,7 +309,7 @@ useEffect(()=>{
 
       <Grid container spacing={2}>
 
-        <Grid size={{ xs: 12, md: 8 }}>
+        <Grid size={{ xs: 12, md: 12 }}>
 
           <Autocomplete
             fullWidth
@@ -324,20 +320,6 @@ useEffect(()=>{
             renderInput={(params)=>(
               <TextField {...params} label="Customer" fullWidth/>
             )}
-          />
-
-        </Grid>
-
-        <Grid size={{ xs: 12, md: 4 }}>
-
-          <FormControlLabel
-            control={
-              <Checkbox
-                checked={billMode}
-                onChange={(e)=>setBillMode(e.target.checked)}
-              />
-            }
-            label="Bill"
           />
 
         </Grid>
