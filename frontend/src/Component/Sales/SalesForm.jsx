@@ -256,6 +256,9 @@ useEffect(()=>{
   const grossTotal =
     rows.reduce((s,r)=>s+r.price*r.qty,0);
 
+  const discountTotal =
+    rows.reduce((s,r)=>s+((Number(r.price || 0) * Number(r.qty || 0) * Number(r.discount || 0)) / 100),0);
+
   const grandTotal =
     rows.reduce((s,r)=>s+r.total,0);
 
@@ -291,7 +294,7 @@ useEffect(()=>{
       gstMode: billMode ? "without":"with",
       items,
       grossTotal,
-      discountTotal:0,
+      discountTotal,
       grandTotal
 
     });

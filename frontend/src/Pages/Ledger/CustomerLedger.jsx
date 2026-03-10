@@ -84,8 +84,19 @@ export default function CustomerLedger() {
             const key = `${saleDate.getFullYear()}-${saleDate.getMonth()}-${nonGst ? "N" : "G"}`;
             monthModeCount[key] = (monthModeCount[key] || 0) + 1;
 
-            const gross = Number(sale.grossTotal || 0);
-            const discountAmount = Number(sale.discountTotal || 0);
+            const grossFromItems = (sale.items || []).reduce(
+              (sum, item) => sum + Number(item.qty || 0) * Number(item.price || 0),
+              0
+            );
+            const discountFromItems = (sale.items || []).reduce((sum, item) => {
+              const lineBase = Number(item.qty || 0) * Number(item.price || 0);
+              return sum + (lineBase * Number(item.discount || 0)) / 100;
+            }, 0);
+            const gross = Number(sale.grossTotal || 0) || grossFromItems;
+            const discountAmount =
+              Number(sale.discountTotal || 0) > 0
+                ? Number(sale.discountTotal || 0)
+                : discountFromItems;
             const discountPercent = gross > 0 ? (discountAmount / gross) * 100 : 0;
 
             return {
