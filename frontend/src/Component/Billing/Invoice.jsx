@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import customFetch from "../../utils/customFetch";
 
 const SHOP = {
@@ -9,7 +9,7 @@ const SHOP = {
   phones: ["88380 57339", "95433 82043"],
   email: "yviraa339@gmail.com",
   address1: "6/541, Gandhi Nagar, Near Jay Matriculation School,",
-  address2: "Allikuttai (PO), Salem - 636 003.",
+  address2: "Allikuttai (PO), Salem - 636 003. (TN)",
   tagline: "Handloom Cloth Merchants",
   bank: {
     accountNo: "1186010000001344",
@@ -94,6 +94,7 @@ const numberToWordsIndian = (num) => {
 
 export default function Invoice() {
   const { state } = useLocation();
+  const navigate = useNavigate();
   const sale = state?.sale;
   const [allSales, setAllSales] = useState([]);
   const [allCustomers, setAllCustomers] = useState([]);
@@ -234,22 +235,111 @@ export default function Invoice() {
   }
 
   const minBodyRows = 18;
-  const emptyRowsCount = Math.max(0, minBodyRows - view.lineItems.length);
-  const emptyRows = Array.from({ length: emptyRowsCount });
+  const showFillerRow = view.lineItems.length < minBodyRows;
 
   return (
-    <div className="bg-gray-100 min-h-screen p-2 md:p-6 overflow-x-auto">
+    <div className="invoice-wrapper bg-gray-100 min-h-screen p-2 md:p-6 overflow-x-auto">
+      <style>
+        {`
+          @page {
+            size: A4;
+            margin: 5mm;
+          }
+          @media print {
+            * {
+              -webkit-print-color-adjust: exact !important;
+              print-color-adjust: exact !important;
+            }
+            body * {
+              visibility: hidden !important;
+            }
+            .invoice-wrapper, .invoice-wrapper * {
+              visibility: visible !important;
+            }
+            html, body {
+              margin: 0 !important;
+              padding: 0 !important;
+              width: 210mm !important;
+              height: 297mm !important;
+              overflow: hidden !important;
+            }
+            #root {
+              margin: 0 !important;
+              padding: 0 !important;
+              width: 210mm !important;
+              height: 297mm !important;
+              overflow: hidden !important;
+            }
+            .invoice-wrapper {
+              position: fixed !important;
+              inset: 0 !important;
+              z-index: 9999 !important;
+              background: #fff !important;
+              padding: 0 !important;
+              margin: 0 !important;
+              width: 200mm !important;
+              height: 287mm !important;
+              overflow: hidden !important;
+            }
+            .no-print {
+              display: none !important;
+            }
+            .invoice-sheet {
+              box-shadow: none !important;
+              margin: 0 !important;
+              width: 200mm !important;
+              min-height: 287mm !important;
+              height: 287mm !important;
+              overflow: hidden !important;
+            }
+            .invoice-inner {
+              margin: 0 !important;
+              width: 100% !important;
+              min-height: 287mm !important;
+              height: 287mm !important;
+              box-sizing: border-box !important;
+              overflow: hidden !important;
+            }
+            .hide-scrollbar,
+            [class*="overflow-"],
+            .overflow-auto,
+            .overflow-hidden {
+              overflow: hidden !important;
+            }
+          }
+        `}
+      </style>
+
       <div
-        className="mx-auto bg-white shadow-xl"
-        style={{ width: "210mm", minHeight: "297mm", fontFamily: '"Times New Roman", serif' }}
+        className="invoice-sheet relative mx-auto bg-white shadow-xl"
+        style={{ width: "210mm", minHeight: "297mm", fontFamily: "Calibri, sans-serif" }}
       >
-        <div className="m-2 border border-black min-h-[280mm] flex flex-col text-[11px] font-semibold">
-          <div className="border-b border-black px-3 py-2">
+        <div className="no-print flex items-center justify-between px-1 pb-2">
+          <button
+            type="button"
+            onClick={() => navigate("/app/sales")}
+            className="bg-white text-[#800020] border border-[#800020] px-3 py-2 text-sm font-bold rounded shadow"
+            title="Back to Sales"
+          >
+            ← Back
+          </button>
+
+          <button
+            type="button"
+            onClick={() => window.print()}
+            className="bg-[#800020] text-white px-4 py-2 text-sm font-bold rounded shadow"
+          >
+            Print
+          </button>
+        </div>
+
+        <div className="invoice-inner m-1 border-[1.5px] border-black min-h-[288mm] flex flex-col text-[12px] font-semibold">
+          <div className="border-b border-black px-3 py-3">
             <div className="grid grid-cols-[1fr_2fr_1fr]">
               <div className="font-bold">{!view.nonGst ? `GSTIN: ${SHOP.gstin}` : ""}</div>
               <div className="text-center leading-tight">
                 <div className="font-bold tracking-wide">{view.nonGst ? "INVOICE" : "TAX INVOICE"}</div>
-                <div className="text-[32px] font-black leading-8 tracking-wide">{SHOP.name}</div>
+                <div className="text-[36px] font-black leading-[1.05] tracking-wide">{SHOP.name}</div>
                 <div className="font-bold">{SHOP.tagline}</div>
                 <div>{SHOP.address1}</div>
                 <div>{SHOP.address2}</div>
@@ -301,44 +391,46 @@ export default function Invoice() {
             </div>
           </div>
 
-          <table className="w-full table-fixed">
-            <thead>
-              <tr className="border-b border-black uppercase text-[10px] font-bold">
-                <th className="w-[45px] border-r border-black px-1 py-1">S.No</th>
-                <th className="border-r border-black px-1 py-1 text-left">Product Description</th>
-                <th className="w-[65px] border-r border-black px-1 py-1">HSN</th>
-                <th className="w-[60px] border-r border-black px-1 py-1">Per Mtr</th>
-                <th className="w-[75px] border-r border-black px-1 py-1">Rate Rs</th>
-                <th className="w-[55px] border-r border-black px-1 py-1">Qty</th>
-                <th className="w-[90px] px-1 py-1 text-right">Total Rs</th>
-              </tr>
-            </thead>
-            <tbody>
-              {view.lineItems.map((item) => (
-                <tr key={`${item.code}-${item.sno}`} className="border-b border-black/60">
-                  <td className="border-r border-black px-1 py-[2px] text-center">{item.sno}</td>
-                  <td className="border-r border-black px-1 py-[2px]">{item.name}</td>
-                  <td className="border-r border-black px-1 py-[2px] text-center">{item.hsn}</td>
-                  <td className="border-r border-black px-1 py-[2px] text-center">-</td>
-                  <td className="border-r border-black px-1 py-[2px] text-right">{fmtMoney(item.rate)}</td>
-                  <td className="border-r border-black px-1 py-[2px] text-center">{item.qty}</td>
-                  <td className="px-1 py-[2px] text-right">{fmtMoney(item.total)}</td>
+          <div className="border-b border-black" style={{ height: "138mm" }}>
+            <table className="w-full h-full table-fixed border-collapse">
+              <thead>
+                <tr className="border-b border-black uppercase text-[12px] font-black">
+                  <th className="w-[45px] border-r border-black px-1 py-1 text-center">S.No</th>
+                  <th className="border-r border-black px-1 py-1 text-center">Product Description</th>
+                  <th className="w-[65px] border-r border-black px-1 py-1 text-center">HSN</th>
+                  <th className="w-[60px] border-r border-black px-1 py-1 text-center">Per Mtr</th>
+                  <th className="w-[75px] border-r border-black px-1 py-1 text-center">Rate (₹)</th>
+                  <th className="w-[55px] border-r border-black px-1 py-1 text-center">Qty</th>
+                  <th className="w-[90px] px-1 py-1 text-center">Total (₹)</th>
                 </tr>
-              ))}
+              </thead>
+              <tbody className="h-full">
+                {view.lineItems.map((item) => (
+                  <tr key={`${item.code}-${item.sno}`} className="border-b border-black/60">
+                    <td className="border-r border-black px-1 py-[2px] text-center">{item.sno}</td>
+                    <td className="border-r border-black px-1 py-[2px]">{item.name}</td>
+                    <td className="border-r border-black px-1 py-[2px] text-center">{item.hsn}</td>
+                    <td className="border-r border-black px-1 py-[2px] text-center">-</td>
+                    <td className="border-r border-black px-1 py-[2px] text-right">{fmtMoney(item.rate)}</td>
+                    <td className="border-r border-black px-1 py-[2px] text-center">{item.qty}</td>
+                    <td className="px-1 py-[2px] text-right">{fmtMoney(item.total)}</td>
+                  </tr>
+                ))}
 
-              {emptyRows.map((_, idx) => (
-                <tr key={`empty-${idx}`} className="border-b border-black/40">
-                  <td className="border-r border-black px-1 py-[2px]">&nbsp;</td>
-                  <td className="border-r border-black px-1 py-[2px]">&nbsp;</td>
-                  <td className="border-r border-black px-1 py-[2px]">&nbsp;</td>
-                  <td className="border-r border-black px-1 py-[2px]">&nbsp;</td>
-                  <td className="border-r border-black px-1 py-[2px]">&nbsp;</td>
-                  <td className="border-r border-black px-1 py-[2px]">&nbsp;</td>
-                  <td className="px-1 py-[2px]">&nbsp;</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                {showFillerRow && (
+                  <tr style={{ height: "100%" }}>
+                    <td className="border-r border-black">&nbsp;</td>
+                    <td className="border-r border-black">&nbsp;</td>
+                    <td className="border-r border-black">&nbsp;</td>
+                    <td className="border-r border-black">&nbsp;</td>
+                    <td className="border-r border-black">&nbsp;</td>
+                    <td className="border-r border-black">&nbsp;</td>
+                    <td>&nbsp;</td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
 
           <div className="mt-auto border-t border-black grid grid-cols-[1fr_1fr]">
             <div className="border-r border-black p-2 flex flex-col justify-between">
@@ -367,47 +459,71 @@ export default function Invoice() {
               )}
             </div>
 
-            <div className="p-2 font-bold">
-              <div className="grid grid-cols-[1fr_120px] border-b border-black/40">
+            <div className="p-2 font-bold text-[12px] flex flex-col">
+              <div className="grid grid-cols-[1fr_64px_120px] border-b border-black">
                 <div className="py-1">Basic Amount</div>
-                <div className="py-1 text-right">Rs. {fmtMoney(view.grossTotal)}</div>
+                <div className="py-1 text-center">: ₹</div>
+                <div className="py-1 text-right">{fmtMoney(view.grossTotal)}</div>
               </div>
-              <div className="grid grid-cols-[1fr_120px] border-b border-black/40">
+              <div className="grid grid-cols-[1fr_64px_120px] border-b border-black">
                 <div className="py-1">Discount</div>
-                <div className="py-1 text-right">Rs. {fmtMoney(view.discountTotal)}</div>
+                <div className="py-1 text-center">: ₹</div>
+                <div className="py-1 text-right">{fmtMoney(view.discountTotal)}</div>
               </div>
               {!view.nonGst && (
                 <>
-                  <div className="grid grid-cols-[1fr_120px] border-b border-black/40">
+                  <div className="grid grid-cols-[1fr_64px_120px] border-b border-black">
                     <div className="py-1">ADD SGST</div>
-                    <div className="py-1 text-right">Rs. {fmtMoney(view.sgstTotal)}</div>
+                    <div className="py-1 text-center">: ₹</div>
+                    <div className="py-1 text-right">{fmtMoney(view.sgstTotal)}</div>
                   </div>
-                  <div className="grid grid-cols-[1fr_120px] border-b border-black/40">
+                  <div className="grid grid-cols-[1fr_64px_120px] border-b border-black">
                     <div className="py-1">ADD CGST</div>
-                    <div className="py-1 text-right">Rs. {fmtMoney(view.cgstTotal)}</div>
+                    <div className="py-1 text-center">: ₹</div>
+                    <div className="py-1 text-right">{fmtMoney(view.cgstTotal)}</div>
                   </div>
-                  <div className="grid grid-cols-[1fr_120px] border-b border-black/40">
+                  <div className="grid grid-cols-[1fr_64px_120px] border-b border-black">
                     <div className="py-1">ADD IGST</div>
-                    <div className="py-1 text-right">Rs. {fmtMoney(view.igstTotal)}</div>
+                    <div className="py-1 text-center">: ₹</div>
+                    <div className="py-1 text-right">{fmtMoney(view.igstTotal)}</div>
                   </div>
-                  <div className="grid grid-cols-[1fr_120px] border-b border-black/40 font-semibold">
+                  <div className="grid grid-cols-[1fr_64px_120px] border-b border-black font-black">
                     <div className="py-1">Tax Amount</div>
-                    <div className="py-1 text-right">Rs. {fmtMoney(view.taxTotal)}</div>
+                    <div className="py-1 text-center">: ₹</div>
+                    <div className="py-1 text-right">{fmtMoney(view.taxTotal)}</div>
                   </div>
                 </>
               )}
-              <div className="grid grid-cols-[1fr_120px] border-b border-black/40">
+              <div className="grid grid-cols-[1fr_64px_120px] border-b border-black">
                 <div className="py-1">Handling / Freight</div>
-                <div className="py-1 text-right">Rs. 0.00</div>
+                <div className="py-1 text-center">: ₹</div>
+                <div className="py-1 text-right">0.00</div>
               </div>
-              <div className="grid grid-cols-[1fr_120px] border-b border-black/40">
+              <div className="grid grid-cols-[1fr_64px_120px] border-b border-black">
                 <div className="py-1">Round Off</div>
-                <div className="py-1 text-right">Rs. 0.00</div>
+                <div className="py-1 text-center">: ₹</div>
+                <div className="py-1 text-right">0.00</div>
               </div>
-              <div className="grid grid-cols-[1fr_140px] mt-1 items-end gap-2">
-                <div className="text-[20px] leading-6 font-black whitespace-nowrap">Grand Total</div>
+              <div className="grid grid-cols-[1fr_64px_120px] mt-1 border-b border-black">
+                <div className="text-[18px] leading-6 font-black whitespace-nowrap">Grand Total</div>
+                <div className="text-center text-[18px] leading-6 font-black whitespace-nowrap">: ₹</div>
                 <div className="text-right text-[18px] leading-6 font-black whitespace-nowrap">
-                  Rs. {fmtMoney(view.grandTotal)}
+                  {fmtMoney(view.grandTotal)}
+                </div>
+              </div>
+
+              <div className="mt-2 border-t border-black pt-1 text-center">
+                <div className="text-[11px] font-medium">
+                  Certified that the particulars given above are true and correct
+                </div>
+                <div className="text-[22px] leading-7 font-black mt-1">
+                  For YUVIRAA SILKS
+                </div>
+                <div className="h-14 mt-1 mb-1 border border-black/70 bg-white">
+                  &nbsp;
+                </div>
+                <div className="text-[12px] font-semibold uppercase">
+                  AUTHORIZED SIGNATORY
                 </div>
               </div>
             </div>
