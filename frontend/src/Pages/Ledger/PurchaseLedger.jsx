@@ -61,18 +61,32 @@ export default function PurchaseLedger() {
         const rows = purchases.map((purchase) => {
           const items = purchase.items || [];
           const qty = items.reduce((sum, item) => sum + Number(item.qty || 0), 0);
-          const total = items.reduce(
+          // Always compute from purchase entry price, not product master/sales price.
+          const totalPurchaseCost = items.reduce(
             (sum, item) => sum + Number(item.qty || 0) * Number(item.price || 0),
             0
           );
+          const total = totalPurchaseCost;
+          const priceValues = items.map((item) => `Rs ${Number(item.price || 0).toLocaleString()}`);
+          const products =
+            items
+              .map((item) => item?.product?.name || item?.product?.productCode || "Product")
+              .join(", ") || "-";
+          const productCodes =
+            items
+              .map((item) => item?.product?.productCode || item?.productCode || "-")
+              .join(", ") || "-";
 
           return {
             id: purchase._id,
             dateRaw: purchase.createdAt,
             date: formatDateTime(purchase.createdAt),
             vendor: purchase.supplier?.name || "Unknown",
+            products,
+            productCodes,
             items: items.length,
             qty,
+            priceValues,
             total,
           };
         });
@@ -101,7 +115,7 @@ export default function PurchaseLedger() {
         search,
         fromDate,
         toDate,
-        searchFields: ["vendor"],
+        searchFields: ["vendor", "products"],
         exactFilters: { vendor: selectedVendor },
       }),
     [allRows, search, fromDate, toDate, selectedVendor]
@@ -147,9 +161,15 @@ export default function PurchaseLedger() {
   const exportColumns = [
     { label: "Date", key: "date" },
     { label: "Supplier", key: "vendor" },
+    { label: "Products", key: "products" },
+    { label: "Product Code", key: "productCodes" },
     { label: "Items", key: "items" },
     { label: "Total Qty", key: "qty" },
-    { label: "Total Amount", value: (row) => row.total.toFixed(2) },
+    {
+      label: "Price",
+      value: (row) => (row.priceValues?.length ? row.priceValues.join(", ") : "Rs 0"),
+    },
+    { label: "Total Amount", value: (row) => `Rs ${Number(row.total || 0).toLocaleString()}` },
   ];
 
   return (
@@ -271,7 +291,7 @@ export default function PurchaseLedger() {
             <Stack direction={{ xs: "column", md: "row" }} spacing={2} mb={2}>
               <TextField
                 size="small"
-                placeholder="Search supplier"
+                placeholder="Search supplier or product"
                 value={search}
                 onChange={(e) => {
                   setPage(1);
@@ -347,33 +367,62 @@ export default function PurchaseLedger() {
             </Typography>
 
             <TableContainer sx={{ overflowX: isMobile ? "auto" : "hidden" }}>
-              <Table size="small" sx={{ minWidth: isMobile ? 700 : "100%" }}>
+              <Table
+                size="small"
+                sx={{ minWidth: isMobile ? 1100 : "100%", tableLayout: "fixed" }}
+              >
                 <TableHead>
                   <TableRow>
-                    <TableCell>Date</TableCell>
-                    <TableCell>Supplier</TableCell>
-                    <TableCell align="center">Items</TableCell>
-                    <TableCell align="center">Total Qty</TableCell>
-                    <TableCell align="right">Total Amount (Rs)</TableCell>
+                    <TableCell align="center" sx={{ width: "5%" }}>
+                      #
+                    </TableCell>
+                    <TableCell sx={{ width: "13%" }}>Date</TableCell>
+                    <TableCell sx={{ width: "12%" }}>Supplier</TableCell>
+                    <TableCell sx={{ width: "20%" }}>Products</TableCell>
+                    <TableCell sx={{ width: "13%" }}>Product Code</TableCell>
+                    <TableCell align="center" sx={{ width: "7%" }}>
+                      Items
+                    </TableCell>
+                    <TableCell align="center" sx={{ width: "8%" }}>
+                      Total Qty
+                    </TableCell>
+                    <TableCell align="right" sx={{ width: "10%" }}>
+                      Price
+                    </TableCell>
+                    <TableCell align="right" sx={{ width: "11%" }}>
+                      Total Amount
+                    </TableCell>
                   </TableRow>
                 </TableHead>
 
                 <TableBody>
                   {pagedRows.length === 0 && (
                     <TableRow>
-                      <TableCell colSpan={5} align="center">
+                      <TableCell colSpan={9} align="center">
                         No purchases found
                       </TableCell>
                     </TableRow>
                   )}
 
-                  {pagedRows.map((row) => (
+                  {pagedRows.map((row, index) => (
                     <TableRow key={row.id}>
+                      <TableCell align="center">{(page - 1) * limit + index + 1}</TableCell>
                       <TableCell>{row.date}</TableCell>
                       <TableCell>{row.vendor}</TableCell>
+                      <TableCell>{row.products}</TableCell>
+                      <TableCell>{row.productCodes}</TableCell>
                       <TableCell align="center">{row.items}</TableCell>
                       <TableCell align="center">{row.qty}</TableCell>
-                      <TableCell align="right">Rs {row.total.toFixed(2)}</TableCell>
+                      <TableCell align="right">
+                        {row.priceValues?.length ? (
+                          row.priceValues.map((price, idx) => <div key={idx}>{price}</div>)
+                        ) : (
+                          "Rs 0"
+                        )}
+                      </TableCell>
+                      <TableCell align="right">
+                        {`Rs ${Number(row.total || 0).toLocaleString()}`}
+                      </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>

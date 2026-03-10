@@ -69,6 +69,14 @@ export default function VendorLedger() {
                 return (nameFromProduct || codeFromProduct || fallbackName || "").trim();
               })
               .filter(Boolean);
+            const productCodeList = (purchase.items || [])
+              .map((item) => {
+                const codeFromProduct =
+                  typeof item.product === "object" ? item.product?.productCode : "";
+                const fallbackCode = item.productCode || "";
+                return (codeFromProduct || fallbackCode || "").trim();
+              })
+              .filter(Boolean);
 
             const total = (purchase.items || []).reduce(
               (sum, item) => sum + Number(item.qty || 0) * Number(item.price || 0),
@@ -81,6 +89,9 @@ export default function VendorLedger() {
               date: formatDateTime(purchase.createdAt),
               vendor: purchase.supplier?.name || "Unknown",
               purchaseItems: purchaseItemsList.join(", ") || `${purchase.items?.length || 0} item(s)`,
+              productCodes: productCodeList.join(", ") || "-",
+              items: (purchase.items || []).length,
+              qty: (purchase.items || []).reduce((sum, item) => sum + Number(item.qty || 0), 0),
               debit: total,
             };
           })
@@ -116,7 +127,7 @@ export default function VendorLedger() {
         search,
         fromDate,
         toDate,
-        searchFields: ["vendor", "purchaseItems"],
+        searchFields: ["vendor", "purchaseItems", "productCodes"],
         exactFilters: { vendor: selectedVendor },
       }),
     [allRows, search, fromDate, toDate, selectedVendor]
@@ -164,6 +175,9 @@ export default function VendorLedger() {
     { label: "Date", key: "date" },
     { label: "Supplier", key: "vendor" },
     { label: "Purchase Items", key: "purchaseItems" },
+    { label: "Product Code", key: "productCodes" },
+    { label: "Items", key: "items" },
+    { label: "Total Qty", key: "qty" },
     { label: "Debit", value: (row) => row.debit.toFixed(2) },
     { label: "Balance", value: (row) => row.balance.toFixed(2) },
   ];
@@ -276,7 +290,7 @@ export default function VendorLedger() {
             <Stack direction={{ xs: "column", md: "row" }} spacing={2} mb={2}>
               <TextField
                 size="small"
-                placeholder="Search supplier or items"
+                placeholder="Search supplier, items or code"
                 value={search}
                 onChange={(e) => {
                   setPage(1);
@@ -353,19 +367,29 @@ export default function VendorLedger() {
               <Table
                 size="small"
                 sx={{
-                  minWidth: isMobile ? 700 : "100%",
+                  minWidth: isMobile ? 1120 : 1310,
                   tableLayout: "fixed",
                 }}
               >
                 <TableHead>
                   <TableRow>
-                    <TableCell sx={{ width: "20%" }}>Date</TableCell>
-                    <TableCell sx={{ width: "20%" }}>Supplier</TableCell>
-                    <TableCell sx={{ width: "30%" }}>Purchase Items</TableCell>
-                    <TableCell align="right" sx={{ width: "15%" }}>
+                    <TableCell align="center" sx={{ width: 50 }}>
+                      #
+                    </TableCell>
+                    <TableCell sx={{ width: 210, whiteSpace: "nowrap" }}>Date</TableCell>
+                    <TableCell sx={{ width: 150, whiteSpace: "nowrap" }}>Supplier</TableCell>
+                    <TableCell sx={{ width: 260 }}>Purchase Items</TableCell>
+                    <TableCell sx={{ width: 140 }}>Product Code</TableCell>
+                    <TableCell align="center" sx={{ width: 80 }}>
+                      Items
+                    </TableCell>
+                    <TableCell align="center" sx={{ width: 95 }}>
+                      Total Qty
+                    </TableCell>
+                    <TableCell align="right" sx={{ width: 140, whiteSpace: "nowrap" }}>
                       Debit (Rs)
                     </TableCell>
-                    <TableCell align="right" sx={{ width: "15%" }}>
+                    <TableCell align="right" sx={{ width: 145, whiteSpace: "nowrap" }}>
                       Balance (Rs)
                     </TableCell>
                   </TableRow>
@@ -374,19 +398,29 @@ export default function VendorLedger() {
                 <TableBody>
                   {pagedRows.length === 0 && (
                     <TableRow>
-                      <TableCell colSpan={5} align="center">
+                      <TableCell colSpan={9} align="center">
                         No purchases found
                       </TableCell>
                     </TableRow>
                   )}
 
-                  {pagedRows.map((row) => (
+                  {pagedRows.map((row, index) => (
                     <TableRow key={row.id}>
-                      <TableCell>{row.date}</TableCell>
-                      <TableCell>{row.vendor}</TableCell>
+                      <TableCell align="center">{(page - 1) * limit + index + 1}</TableCell>
+                      <TableCell sx={{ whiteSpace: "nowrap" }}>{row.date}</TableCell>
+                      <TableCell sx={{ whiteSpace: "nowrap" }}>{row.vendor}</TableCell>
                       <TableCell>{row.purchaseItems}</TableCell>
-                      <TableCell align="right">Rs {row.debit.toFixed(2)}</TableCell>
-                      <TableCell align="right">Rs {row.balance.toFixed(2)}</TableCell>
+                      <TableCell sx={{ whiteSpace: "normal", overflowWrap: "anywhere" }}>
+                        {row.productCodes}
+                      </TableCell>
+                      <TableCell align="center">{row.items}</TableCell>
+                      <TableCell align="center">{row.qty}</TableCell>
+                      <TableCell align="right" sx={{ whiteSpace: "nowrap" }}>
+                        Rs {row.debit.toFixed(2)}
+                      </TableCell>
+                      <TableCell align="right" sx={{ whiteSpace: "nowrap" }}>
+                        Rs {row.balance.toFixed(2)}
+                      </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>

@@ -66,6 +66,14 @@ export default function SalesLedger() {
           dateRaw: sale.createdAt,
           date: formatDateTime(sale.createdAt),
           customer: sale.customer?.name || "Walk-in",
+          products:
+            (sale.items || [])
+              .map((item) => item.product?.name || item.product?.productCode || "Product")
+              .join(", ") || "-",
+          productCodes:
+            (sale.items || [])
+              .map((item) => item.product?.productCode || item.productCode || "-")
+              .join(", ") || "-",
           items: sale.items?.length || 0,
           qty: (sale.items || []).reduce((sum, item) => sum + Number(item.qty || 0), 0),
           total: Number(sale.grandTotal || 0),
@@ -95,7 +103,7 @@ export default function SalesLedger() {
         search,
         fromDate,
         toDate,
-        searchFields: ["customer"],
+        searchFields: ["customer", "products", "productCodes"],
         exactFilters: {
           customer: selectedCustomer,
           mode: showWithoutGst ? "without" : "with",
@@ -144,6 +152,8 @@ export default function SalesLedger() {
   const exportColumns = [
     { label: "Date", key: "date" },
     { label: "Customer", key: "customer" },
+    { label: "Products", key: "products" },
+    { label: "Product Code", key: "productCodes" },
     { label: "Items", key: "items" },
     { label: "Total Qty", key: "qty" },
     { label: "Grand Total", value: (row) => row.total.toFixed(2) },
@@ -266,7 +276,7 @@ export default function SalesLedger() {
             <Stack direction={{ xs: "column", md: "row" }} spacing={2} mb={2}>
               <TextField
                 size="small"
-                placeholder="Search customer"
+                placeholder="Search customer or product"
                 value={search}
                 onChange={(e) => {
                   setPage(1);
@@ -343,23 +353,27 @@ export default function SalesLedger() {
             <Stack direction="row" alignItems="center" spacing={1}>
               <Typography variant="h6">Filtered Results: {sortedRows.length}</Typography>
             </Stack>
-            <Stack direction="row" alignItems="center" spacing={1} mb={2}>
-              <Checkbox
-                checked={showWithoutGst}
-                onChange={(e) => {
-                  setPage(1);
-                  setShowWithoutGst(e.target.checked);
-                }}
-                inputProps={{ "aria-label": "toggle gst mode" }}
-              />
-            </Stack>
 
             <TableContainer sx={{ overflowX: isMobile ? "auto" : "hidden" }}>
               <Table size="small" sx={{ minWidth: isMobile ? 700 : "100%" }}>
                 <TableHead>
                   <TableRow>
+                    <TableCell align="center">
+                      <Checkbox
+                        checked={showWithoutGst}
+                        onChange={(e) => {
+                          setPage(1);
+                          setShowWithoutGst(e.target.checked);
+                        }}
+                        inputProps={{ "aria-label": "toggle gst mode" }}
+                        size="small"
+                      />
+                    </TableCell>
+                    <TableCell align="center">#</TableCell>
                     <TableCell align="center">Date</TableCell>
                     <TableCell>Customer</TableCell>
+                    <TableCell>Products</TableCell>
+                    <TableCell>Product Code</TableCell>
                     <TableCell align="center">Items</TableCell>
                     <TableCell align="center">Total Qty</TableCell>
                     <TableCell align="right">Grand Total</TableCell>
@@ -369,16 +383,20 @@ export default function SalesLedger() {
                 <TableBody>
                   {pagedRows.length === 0 && (
                     <TableRow>
-                      <TableCell colSpan={5} align="center">
+                      <TableCell colSpan={9} align="center">
                         No sales records found
                       </TableCell>
                     </TableRow>
                   )}
 
-                  {pagedRows.map((row) => (
+                  {pagedRows.map((row, index) => (
                     <TableRow key={row.id}>
+                      <TableCell />
+                      <TableCell align="center">{(page - 1) * limit + index + 1}</TableCell>
                       <TableCell align="center">{row.date}</TableCell>
                       <TableCell>{row.customer}</TableCell>
+                      <TableCell>{row.products}</TableCell>
+                      <TableCell>{row.productCodes}</TableCell>
                       <TableCell align="center">{row.items}</TableCell>
                       <TableCell align="center">{row.qty}</TableCell>
                       <TableCell align="right">

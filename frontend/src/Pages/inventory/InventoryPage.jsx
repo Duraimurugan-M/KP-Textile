@@ -61,6 +61,7 @@ export default function InventoryPage() {
 
         return (
           (p.name || "").toLowerCase().includes(searchValue) ||
+          (p.productCode || "").toLowerCase().includes(searchValue) ||
           (p.category || "").toLowerCase().includes(searchValue) ||
           String(p.price || "").includes(searchValue) ||
           String(p.stock || "").includes(searchValue) ||

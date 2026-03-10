@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import {
   Box,
   Button,
+  Checkbox,
   Grid,
   Paper,
   Stack,
@@ -39,6 +40,15 @@ import {
 
 const COLORS = ["#1976d2", "#2e7d32", "#f57c00", "#6a1b9a", "#c2185b"];
 
+const pad = (n, width = 2) => String(n).padStart(width, "0");
+
+const buildInvoiceNo = (date, serial, withPrefix = true) => {
+  const yy = pad(date.getFullYear() % 100, 2);
+  const mm = pad(date.getMonth() + 1, 2);
+  const seq = pad(serial, 3);
+  return withPrefix ? `YS${yy}${mm}${seq}` : `${yy}${mm}${seq}`;
+};
+
 export default function CustomerLedger() {
   const [allRows, setAllRows] = useState([]);
   const [search, setSearch] = useState("");
@@ -46,6 +56,7 @@ export default function CustomerLedger() {
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
   const [selectedCustomer, setSelectedCustomer] = useState("");
+  const [showOtherParticulars, setShowOtherParticulars] = useState(false);
   const [page, setPage] = useState(1);
   const [limit] = useState(10);
 
@@ -58,15 +69,45 @@ export default function CustomerLedger() {
         const { data } = await customFetch.get("/sales");
         const sales = data?.sales || [];
 
-        const mapped = sales
-          .map((sale) => ({
+        const orderedSales = [...sales].sort((a, b) => {
+          const ta = new Date(a.createdAt).getTime();
+          const tb = new Date(b.createdAt).getTime();
+          if (ta !== tb) return ta - tb;
+          return String(a._id || "").localeCompare(String(b._id || ""));
+        });
+
+        const monthModeCount = {};
+        const mapped = orderedSales
+          .map((sale) => {
+            const saleDate = sale.createdAt ? new Date(sale.createdAt) : new Date();
+            const nonGst = sale.gstMode === "without";
+            const key = `${saleDate.getFullYear()}-${saleDate.getMonth()}-${nonGst ? "N" : "G"}`;
+            monthModeCount[key] = (monthModeCount[key] || 0) + 1;
+
+            const gross = Number(sale.grossTotal || 0);
+            const discountAmount = Number(sale.discountTotal || 0);
+            const discountPercent = gross > 0 ? (discountAmount / gross) * 100 : 0;
+
+            return {
             id: sale._id,
             dateRaw: sale.createdAt,
             date: formatDateTime(sale.createdAt),
             customer: sale.customer?.name || "Walk-in",
-            particular: `Sale #${sale._id?.slice(-6) || ""}`,
+            products:
+              (sale.items || [])
+                .map((item) => item.product?.name || item.product?.productCode || "Product")
+                .join(", ") || "-",
+            productCodes:
+              (sale.items || [])
+                .map((item) => item.product?.productCode || item.productCode || "-")
+                .join(", ") || "-",
+            items: sale.items?.length || 0,
+            qty: (sale.items || []).reduce((sum, item) => sum + Number(item.qty || 0), 0),
+            particular: buildInvoiceNo(saleDate, monthModeCount[key], !nonGst),
+            discountPercent,
             debit: Number(sale.grandTotal || 0),
-          }))
+          };
+          })
           .sort((a, b) => new Date(a.dateRaw) - new Date(b.dateRaw));
 
         let running = 0;
@@ -92,18 +133,24 @@ export default function CustomerLedger() {
     [allRows]
   );
 
-  const filteredRows = useMemo(
-    () =>
-      filterLedgerRows({
-        rows: allRows,
-        search,
-        fromDate,
-        toDate,
-        searchFields: ["customer", "particular"],
-        exactFilters: { customer: selectedCustomer },
-      }),
-    [allRows, search, fromDate, toDate, selectedCustomer]
-  );
+  const filteredRows = useMemo(() => {
+    const baseRows = filterLedgerRows({
+      rows: allRows,
+      search,
+      fromDate,
+      toDate,
+      searchFields: ["customer", "products", "productCodes", "particular"],
+      exactFilters: { customer: selectedCustomer },
+    });
+
+    return baseRows.filter((row) => {
+      const isYsParticular = String(row.particular || "")
+        .trim()
+        .toUpperCase()
+        .startsWith("YS");
+      return showOtherParticulars ? !isYsParticular : isYsParticular;
+    });
+  }, [allRows, search, fromDate, toDate, selectedCustomer, showOtherParticulars]);
 
   const sortedRows = useMemo(
     () => sortLedgerRows(filteredRows, sort),
@@ -133,7 +180,12 @@ export default function CustomerLedger() {
   const exportColumns = [
     { label: "Date", key: "date" },
     { label: "Customer", key: "customer" },
+    { label: "Products", key: "products" },
+    { label: "Product Code", key: "productCodes" },
+    { label: "Items", key: "items" },
+    { label: "Total Qty", key: "qty" },
     { label: "Particular", key: "particular" },
+    { label: "Discount %", value: (row) => row.discountPercent.toFixed(2) },
     { label: "Debit", value: (row) => row.debit.toFixed(2) },
     { label: "Balance", value: (row) => row.balance.toFixed(2) },
   ];
@@ -256,7 +308,7 @@ export default function CustomerLedger() {
             <Stack direction={{ xs: "column", md: "row" }} spacing={2} mb={2}>
               <TextField
                 size="small"
-                placeholder="Search customer or particular"
+                placeholder="Search customer, product, code or invoice"
                 value={search}
                 onChange={(e) => {
                   setPage(1);
@@ -333,19 +385,44 @@ export default function CustomerLedger() {
               <Table
                 size="small"
                 sx={{
-                  minWidth: isMobile ? 700 : "100%",
+                  minWidth: isMobile ? 1200 : 1340,
                   tableLayout: "fixed",
                 }}
               >
                 <TableHead>
                   <TableRow>
-                    <TableCell sx={{ width: "20%" }}>Date</TableCell>
-                    <TableCell sx={{ width: "20%" }}>Customer</TableCell>
-                    <TableCell sx={{ width: "30%" }}>Particular</TableCell>
-                    <TableCell align="right" sx={{ width: "15%" }}>
+                    <TableCell align="center" sx={{ width: 40 }}>
+                      <Checkbox
+                        checked={showOtherParticulars}
+                        onChange={(e) => {
+                          setPage(1);
+                          setShowOtherParticulars(e.target.checked);
+                        }}
+                        inputProps={{ "aria-label": "toggle particular filter" }}
+                        size="small"
+                      />
+                    </TableCell>
+                    <TableCell align="center" sx={{ width: 40 }}>
+                      #
+                    </TableCell>
+                    <TableCell sx={{ width: 180, whiteSpace: "nowrap" }}>Date</TableCell>
+                    <TableCell sx={{ width: 120, whiteSpace: "nowrap" }}>Customer</TableCell>
+                    <TableCell sx={{ width: 220 }}>Products</TableCell>
+                    <TableCell sx={{ width: 130, whiteSpace: "nowrap" }}>Product Code</TableCell>
+                    <TableCell align="center" sx={{ width: 70 }}>
+                      Items
+                    </TableCell>
+                    <TableCell align="center" sx={{ width: 90 }}>
+                      Total Qty
+                    </TableCell>
+                    <TableCell sx={{ width: 120, whiteSpace: "nowrap" }}>Particular</TableCell>
+                    <TableCell align="right" sx={{ width: 90, whiteSpace: "nowrap" }}>
+                      Discount %
+                    </TableCell>
+                    <TableCell align="right" sx={{ width: 130, whiteSpace: "nowrap" }}>
                       Debit (Rs)
                     </TableCell>
-                    <TableCell align="right" sx={{ width: "15%" }}>
+                    <TableCell align="right" sx={{ width: 130, whiteSpace: "nowrap" }}>
                       Balance (Rs)
                     </TableCell>
                   </TableRow>
@@ -354,19 +431,32 @@ export default function CustomerLedger() {
                 <TableBody>
                   {pagedRows.length === 0 && (
                     <TableRow>
-                      <TableCell colSpan={5} align="center">
+                      <TableCell colSpan={12} align="center">
                         No ledger records found
                       </TableCell>
                     </TableRow>
                   )}
 
-                  {pagedRows.map((row) => (
+                  {pagedRows.map((row, index) => (
                     <TableRow key={row.id}>
-                      <TableCell>{row.date}</TableCell>
-                      <TableCell>{row.customer}</TableCell>
-                      <TableCell>{row.particular}</TableCell>
-                      <TableCell align="right">Rs {row.debit.toFixed(2)}</TableCell>
-                      <TableCell align="right">Rs {row.balance.toFixed(2)}</TableCell>
+                      <TableCell />
+                      <TableCell align="center">{(page - 1) * limit + index + 1}</TableCell>
+                      <TableCell sx={{ whiteSpace: "nowrap" }}>{row.date}</TableCell>
+                      <TableCell sx={{ whiteSpace: "nowrap" }}>{row.customer}</TableCell>
+                      <TableCell>{row.products}</TableCell>
+                      <TableCell sx={{ whiteSpace: "nowrap" }}>{row.productCodes}</TableCell>
+                      <TableCell align="center">{row.items}</TableCell>
+                      <TableCell align="center">{row.qty}</TableCell>
+                      <TableCell sx={{ whiteSpace: "nowrap" }}>{row.particular}</TableCell>
+                      <TableCell align="right" sx={{ whiteSpace: "nowrap" }}>
+                        {row.discountPercent.toFixed(2)}%
+                      </TableCell>
+                      <TableCell align="right" sx={{ whiteSpace: "nowrap" }}>
+                        Rs {row.debit.toFixed(2)}
+                      </TableCell>
+                      <TableCell align="right" sx={{ whiteSpace: "nowrap" }}>
+                        Rs {row.balance.toFixed(2)}
+                      </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>

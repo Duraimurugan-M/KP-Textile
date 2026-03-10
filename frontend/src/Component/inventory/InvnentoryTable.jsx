@@ -83,6 +83,7 @@ export default function InventoryTable({
           <TableHead>
             <TableRow>
               <TableCell>Name</TableCell>
+              <TableCell>Product Code</TableCell>
               <TableCell>Category</TableCell>
               <TableCell>Price</TableCell>
               <TableCell>Stock</TableCell>
@@ -93,7 +94,7 @@ export default function InventoryTable({
           <TableBody>
             {products.length === 0 && (
               <TableRow>
-                <TableCell colSpan={5} align="center">
+                <TableCell colSpan={6} align="center">
                   No products found
                 </TableCell>
               </TableRow>
@@ -102,6 +103,7 @@ export default function InventoryTable({
             {products.map((p) => (
               <TableRow key={p._id || p.id}>
                 <TableCell>{p.name}</TableCell>
+                <TableCell>{p.productCode || "-"}</TableCell>
                 <TableCell>{p.category}</TableCell>
                 <TableCell>{`Rs ${Number(p.price || 0).toLocaleString()}`}</TableCell>
                 <TableCell>{Number(p.stock || 0)}</TableCell>
