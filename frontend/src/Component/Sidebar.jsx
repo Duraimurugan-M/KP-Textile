@@ -265,15 +265,6 @@ const menuItems = [
   },
 ];
 
-// local placeholder to avoid internet/DNS image error
-const placeholderLogo =
-  "data:image/svg+xml;utf8," +
-  encodeURIComponent(`
-    <svg xmlns="http://www.w3.org/2000/svg" width="80" height="80">
-      <rect width="100%" height="100%" fill="white"/>
-    </svg>
-  `);
-
 export default function Sidebar() {
   const [collapsed, setCollapsed] = useState(true);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -305,12 +296,16 @@ export default function Sidebar() {
         style={{ backgroundColor: "#800E13" }}
       >
         <div className="flex items-center justify-between px-4 py-3">
-          <div className="flex items-center gap-2">
-            <img
-              src={placeholderLogo}
-              alt="YUVIRAA SILKS"
-              className="w-8 h-8 rounded-full object-cover bg-white"
-            />
+          <div
+            className="flex items-center gap-2 cursor-pointer"
+            onClick={() => {
+              setMobileMenuOpen(false);
+              navigate("/app");
+            }}
+          >
+            <div className="w-8 h-8 rounded-full bg-white text-[#800E13] font-bold text-sm flex items-center justify-center">
+              YS
+            </div>
             <span className="font-semibold text-lg">YUVIRAA SILKS</span>
           </div>
 
@@ -379,7 +374,7 @@ export default function Sidebar() {
                 setMobileMenuOpen(false);
                 handleLogout();
               }}
-              className={`${menuItem} w-full bg-white/10`}
+              className={`${menuItem} w-full bg-white/10 cursor-pointer`}
             >
               <FaSignOutAlt size={20} />
               <span>Logout</span>
@@ -400,12 +395,13 @@ export default function Sidebar() {
         }}
       >
         {/* LOGO */}
-        <div className="flex items-center justify-center py-6 border-b border-white/20">
-          <img
-            src={placeholderLogo}
-            alt="YUVIRAA SILKS"
-            className="w-12 h-12 rounded-full object-cover bg-white"
-          />
+        <div
+          className="flex items-center justify-center py-6 border-b border-white/20 cursor-pointer"
+          onClick={() => navigate("/app")}
+        >
+          <div className="w-12 h-12 rounded-full bg-white text-[#800E13] font-bold text-lg flex items-center justify-center">
+            YS
+          </div>
 
           {!collapsed && (
             <div className="ml-3">
@@ -483,7 +479,7 @@ export default function Sidebar() {
             onClick={handleLogout}
             className={`${menuItem} w-full ${
               collapsed ? "justify-center" : ""
-            } bg-white/10`}
+            } bg-white/10 cursor-pointer`}
           >
             <FaSignOutAlt size={20} />
             {!collapsed && <span>Logout</span>}

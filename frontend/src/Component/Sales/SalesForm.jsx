@@ -86,15 +86,16 @@ export default function SalesForm({ products, customers, onSale, billMode }) {
       if(index !== -1){
 
         const updated=[...prev];
+        const currentQty = Number(updated[index].qty || 0);
 
-        if(updated[index].qty >= product.stock){
+        if(currentQty >= product.stock){
 
           toast.error(`Stock limit reached for ${product.name}`);
           return updated;
 
         }
 
-        updated[index].qty += 1;
+        updated[index].qty = currentQty + 1;
         updated[index] = calculateRow(updated[index]);
 
         return updated;
@@ -220,15 +221,16 @@ useEffect(()=>{
     const updated=[...rows];
 
     if(field==="qty"){
+      const stock = Number(updated[i].stock || 0);
+      let qtyValue = Number(value || 0);
 
-      const stock = updated[i].stock;
-
-      if(Number(value) > stock){
+      if(qtyValue > stock){
 
         toast.error("Cannot exceed available stock");
-        value = stock;
+        qtyValue = stock;
 
       }
+      value = qtyValue;
 
     }
 

@@ -15,7 +15,6 @@ import {
 export default function PurchaseList({
   purchases = [],
   products = [],
-  onDelete,
   search,
   setSearch,
   sort,
@@ -46,13 +45,15 @@ export default function PurchaseList({
     return products.find((p) => (p._id || p.id) === id)?.name || "Unknown";
   };
 
-  const handleDelete = async (id) => {
-    if (!id) return;
+  const getProductCode = (item) => {
+    if (item?.product && typeof item.product === "object") {
+      return item.product.productCode || "-";
+    }
 
-    const confirmed = window.confirm("Delete this purchase?");
-    if (!confirmed) return;
-
-    await onDelete?.(id);
+    const id = item.product || item.productId;
+    return (
+      products.find((p) => (p._id || p.id) === id)?.productCode || "-"
+    );
   };
 
   return (
@@ -102,20 +103,21 @@ export default function PurchaseList({
           <TableHead>
             <TableRow>
               <TableCell>#</TableCell>
-              <TableCell>Date</TableCell>
+              <TableCell>Date & Time</TableCell>
               <TableCell>Supplier</TableCell>
               <TableCell>Products</TableCell>
+              <TableCell>Product Code</TableCell>
               <TableCell>Qty</TableCell>
               <TableCell>Price</TableCell>
+              <TableCell>Total</TableCell>
               <TableCell>Total Items</TableCell>
-              <TableCell align="right">Action</TableCell>
             </TableRow>
           </TableHead>
 
           <TableBody>
             {purchases.length === 0 && (
               <TableRow>
-                <TableCell colSpan={8} align="center">
+                <TableCell colSpan={9} align="center">
                   No purchases found
                 </TableCell>
               </TableRow>
@@ -130,7 +132,7 @@ export default function PurchaseList({
 
                   <TableCell>
                     {purchase.createdAt
-                      ? new Date(purchase.createdAt).toLocaleDateString()
+                      ? new Date(purchase.createdAt).toLocaleString()
                       : purchase.date || "-"}
                   </TableCell>
 
@@ -140,6 +142,16 @@ export default function PurchaseList({
                     {purchase.items?.length ? (
                       purchase.items.map((item, idx) => (
                         <div key={idx}>{getProductName(item)}</div>
+                      ))
+                    ) : (
+                      "-"
+                    )}
+                  </TableCell>
+
+                  <TableCell>
+                    {purchase.items?.length ? (
+                      purchase.items.map((item, idx) => (
+                        <div key={idx}>{getProductCode(item)}</div>
                       ))
                     ) : (
                       "-"
@@ -168,17 +180,20 @@ export default function PurchaseList({
                     )}
                   </TableCell>
 
-                  <TableCell>{purchase.items?.length || 0}</TableCell>
-
-                  <TableCell align="right">
-                    <Button
-                      size="small"
-                      color="error"
-                      onClick={() => handleDelete(id)}
-                    >
-                      Delete
-                    </Button>
+                  <TableCell>
+                    {purchase.items?.length ? (
+                      purchase.items.map((item, idx) => (
+                        <div key={idx}>
+                          Rs{" "}
+                          {Number((item.qty || 0) * (item.price || 0)).toLocaleString()}
+                        </div>
+                      ))
+                    ) : (
+                      "-"
+                    )}
                   </TableCell>
+
+                  <TableCell>{purchase.items?.length || 0}</TableCell>
                 </TableRow>
               );
             })}
