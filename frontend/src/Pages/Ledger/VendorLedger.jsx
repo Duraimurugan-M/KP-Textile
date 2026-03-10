@@ -1,120 +1,178 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Box,
+  Button,
   Grid,
   Paper,
-  Typography,
+  Stack,
   Table,
+  TableBody,
+  TableCell,
+  TableContainer,
   TableHead,
   TableRow,
-  TableCell,
-  TableBody,
-  TableContainer,
-  useTheme,
+  TextField,
+  Typography,
   useMediaQuery,
+  useTheme,
 } from "@mui/material";
 import {
-  BarChart,
   Bar,
+  BarChart,
+  CartesianGrid,
+  Line,
+  LineChart,
+  ResponsiveContainer,
+  Tooltip,
   XAxis,
   YAxis,
-  Tooltip,
-  LineChart,
-  Line,
-  CartesianGrid,
-  ResponsiveContainer,
 } from "recharts";
+import customFetch from "../../utils/customFetch";
+import {
+  exportLedgerToExcel,
+  exportLedgerToPdf,
+  filterLedgerRows,
+  formatDateTime,
+  paginateRows,
+  sortLedgerRows,
+} from "./ledgerHelpers";
 
 export default function VendorLedger() {
-  const [ledgerRows, setLedgerRows] = useState([]);
-  const [vendorSummary, setVendorSummary] = useState([]);
-  const [trendData, setTrendData] = useState([]);
-  const [topVendor, setTopVendor] = useState(null);
+  const [allRows, setAllRows] = useState([]);
+  const [search, setSearch] = useState("");
+  const [sort, setSort] = useState("-dateRaw");
+  const [fromDate, setFromDate] = useState("");
+  const [toDate, setToDate] = useState("");
+  const [selectedVendor, setSelectedVendor] = useState("");
+  const [page, setPage] = useState(1);
+  const [limit] = useState(10);
 
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
   useEffect(() => {
-    const purchases =
-      JSON.parse(localStorage.getItem("purchases")) || [];
+    const fetchPurchases = async () => {
+      try {
+        const { data } = await customFetch.get("/purchases");
+        const purchases = data?.purchases || [];
 
-    let runningBalance = 0;
-    const ledger = [];
-    const vendorMap = {};
-    const trendMap = {};
+        const mapped = purchases
+          .map((purchase) => {
+            const total = (purchase.items || []).reduce(
+              (sum, item) => sum + Number(item.qty || 0) * Number(item.price || 0),
+              0
+            );
 
-    purchases.forEach((p) => {
-      const total = p.items.reduce(
-        (s, i) => s + i.qty * i.price,
-        0
-      );
+            return {
+              id: purchase._id,
+              dateRaw: purchase.createdAt,
+              date: formatDateTime(purchase.createdAt),
+              vendor: purchase.supplier?.name || "Unknown",
+              particular: `Purchase #${purchase._id?.slice(-6) || ""}`,
+              debit: total,
+            };
+          })
+          .sort((a, b) => new Date(a.dateRaw) - new Date(b.dateRaw));
 
-      runningBalance += total;
+        let runningBalance = 0;
+        const rows = mapped.map((row) => {
+          runningBalance += row.debit;
+          return { ...row, balance: runningBalance };
+        });
 
-      ledger.push({
-        date: p.date,
-        vendor: p.supplierName,
-        particular: `Purchase #${p.id}`,
-        debit: total,
-        balance: runningBalance,
-      });
+        setAllRows(rows);
+      } catch {
+        setAllRows([]);
+      }
+    };
 
-      vendorMap[p.supplierName] =
-        (vendorMap[p.supplierName] || 0) + total;
-
-      trendMap[p.date] = (trendMap[p.date] || 0) + total;
-    });
-
-    setLedgerRows(ledger);
-
-    const vendorArr = Object.keys(vendorMap).map((v) => ({
-      name: v,
-      value: vendorMap[v],
-    }));
-
-    setVendorSummary(vendorArr);
-
-    if (vendorArr.length) {
-      setTopVendor(
-        vendorArr.reduce((a, b) =>
-          b.value > a.value ? b : a
-        )
-      );
-    }
-
-    const trendArr = Object.keys(trendMap).map((d) => ({
-      date: d,
-      amount: trendMap[d],
-    }));
-
-    setTrendData(trendArr);
+    fetchPurchases();
   }, []);
 
-  const topFive = [...vendorSummary]
-    .sort((a, b) => b.value - a.value)
-    .slice(0, 5);
+  const vendorOptions = useMemo(
+    () =>
+      [...new Set(allRows.map((row) => row.vendor))]
+        .filter(Boolean)
+        .sort((a, b) => a.localeCompare(b)),
+    [allRows]
+  );
+
+  const filteredRows = useMemo(
+    () =>
+      filterLedgerRows({
+        rows: allRows,
+        search,
+        fromDate,
+        toDate,
+        searchFields: ["vendor", "particular"],
+        exactFilters: { vendor: selectedVendor },
+      }),
+    [allRows, search, fromDate, toDate, selectedVendor]
+  );
+
+  const sortedRows = useMemo(
+    () => sortLedgerRows(filteredRows, sort),
+    [filteredRows, sort]
+  );
+
+  const pagedRows = useMemo(
+    () => paginateRows(sortedRows, page, limit),
+    [sortedRows, page, limit]
+  );
+
+  const vendorSummary = useMemo(() => {
+    const map = {};
+
+    filteredRows.forEach((row) => {
+      map[row.vendor] = (map[row.vendor] || 0) + row.debit;
+    });
+
+    return Object.keys(map).map((name) => ({ name, value: map[name] }));
+  }, [filteredRows]);
+
+  const topVendor = useMemo(() => {
+    if (!vendorSummary.length) return null;
+    return vendorSummary.reduce((a, b) => (b.value > a.value ? b : a));
+  }, [vendorSummary]);
+
+  const topFive = [...vendorSummary].sort((a, b) => b.value - a.value).slice(0, 5);
+
+  const trendData = useMemo(() => {
+    const map = {};
+
+    filteredRows.forEach((row) => {
+      const key = new Date(row.dateRaw).toLocaleDateString();
+      map[key] = (map[key] || 0) + row.debit;
+    });
+
+    return Object.keys(map).map((date) => ({ date, amount: map[date] }));
+  }, [filteredRows]);
+
+  const exportColumns = [
+    { label: "Date", key: "date" },
+    { label: "Vendor", key: "vendor" },
+    { label: "Particular", key: "particular" },
+    { label: "Debit", value: (row) => row.debit.toFixed(2) },
+    { label: "Balance", value: (row) => row.balance.toFixed(2) },
+  ];
 
   return (
     <Box sx={{ width: "100%", p: { xs: 2, md: 3 } }}>
       <Grid container spacing={3}>
-        {/* 🔝 TOP VENDOR */}
         {topVendor && (
           <Grid item xs={12}>
             <Paper sx={{ p: 3, bgcolor: "#fff3e0" }}>
-              <Typography variant="subtitle2">
-                Top Vendor
-              </Typography>
+              <Typography variant="subtitle2">Top Vendor</Typography>
               <Typography variant="h4" color="warning.main">
                 {topVendor.name}
               </Typography>
               <Typography variant="h6">
-                Total Purchase: ₹{topVendor.value.toFixed(2)}
+                Total Purchase: Rs {topVendor.value.toFixed(2)}
               </Typography>
             </Paper>
           </Grid>
         )}
 
-        {/* 📊 TOP 5 VENDORS BAR CHART */}
         <Grid item xs={12} lg={6}>
           <Paper sx={{ p: 3, height: 380 }}>
             <Typography variant="h6" mb={2}>
@@ -122,10 +180,7 @@ export default function VendorLedger() {
             </Typography>
 
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart
-                data={topFive}
-                margin={{ top: 20, bottom: 60 }}
-              >
+              <BarChart data={topFive} margin={{ top: 20, bottom: 60 }}>
                 <XAxis
                   dataKey="name"
                   angle={-30}
@@ -136,17 +191,12 @@ export default function VendorLedger() {
                 />
                 <YAxis />
                 <Tooltip />
-                <Bar
-                  dataKey="value"
-                  fill="#f57c00"
-                  radius={[6, 6, 0, 0]}
-                />
+                <Bar dataKey="value" fill="#f57c00" radius={[6, 6, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </Paper>
         </Grid>
 
-        {/* 📈 PURCHASE TREND LINE CHART */}
         <Grid item xs={12} lg={6}>
           <Paper sx={{ p: 3, height: 380 }}>
             <Typography variant="h6" mb={2}>
@@ -154,61 +204,150 @@ export default function VendorLedger() {
             </Typography>
 
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart
-  data={trendData}
-  margin={{ top: 20, right: 20, left: 10, bottom: 60 }}
->
-  <CartesianGrid strokeDasharray="3 3" />
-  <XAxis
-    dataKey="date"
-    angle={-30}
-    textAnchor="end"
-    interval={0}
-    height={60}
-    tick={{ fontSize: isMobile ? 10 : 12 }}
-  />
-  <YAxis />
-  <Tooltip />
-  <Line
-    type="monotone"
-    dataKey="amount"
-    stroke="#6a1b9a"
-    strokeWidth={3}
-  />
-</LineChart>
-
+              <LineChart data={trendData} margin={{ top: 20, right: 20, left: 10, bottom: 60 }}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis
+                  dataKey="date"
+                  angle={-30}
+                  textAnchor="end"
+                  interval={0}
+                  height={60}
+                  tick={{ fontSize: isMobile ? 10 : 12 }}
+                />
+                <YAxis />
+                <Tooltip />
+                <Line type="monotone" dataKey="amount" stroke="#6a1b9a" strokeWidth={3} />
+              </LineChart>
             </ResponsiveContainer>
           </Paper>
         </Grid>
 
-        {/* 📋 VENDOR LEDGER TABLE */}
         <Grid item xs={12}>
           <Paper sx={{ p: 3 }}>
+            <Stack
+              direction={{ xs: "column", md: "row" }}
+              spacing={2}
+              justifyContent="space-between"
+              mb={2}
+            >
+              <Typography variant="h6">Vendor Purchase Ledger</Typography>
+              <Stack direction={{ xs: "column", sm: "row" }} spacing={1}>
+                <Button
+                  variant="outlined"
+                  onClick={() =>
+                    exportLedgerToExcel({
+                      rows: sortedRows,
+                      columns: exportColumns,
+                      fileName: "vendor-ledger",
+                    })
+                  }
+                >
+                  Export Excel
+                </Button>
+                <Button
+                  variant="outlined"
+                  onClick={() =>
+                    exportLedgerToPdf({
+                      rows: sortedRows,
+                      columns: exportColumns,
+                      title: "Vendor Ledger",
+                      fileName: "vendor-ledger",
+                    })
+                  }
+                >
+                  Export PDF
+                </Button>
+              </Stack>
+            </Stack>
+
+            <Stack direction={{ xs: "column", md: "row" }} spacing={2} mb={2}>
+              <TextField
+                size="small"
+                placeholder="Search vendor or particular"
+                value={search}
+                onChange={(e) => {
+                  setPage(1);
+                  setSearch(e.target.value);
+                }}
+              />
+              <TextField
+                select
+                size="small"
+                label="Sort"
+                value={sort}
+                onChange={(e) => {
+                  setPage(1);
+                  setSort(e.target.value);
+                }}
+                SelectProps={{ native: true }}
+              >
+                <option value="-dateRaw">Newest</option>
+                <option value="dateRaw">Oldest</option>
+                <option value="vendor">Vendor A-Z</option>
+                <option value="-vendor">Vendor Z-A</option>
+                <option value="-debit">Debit High-Low</option>
+                <option value="debit">Debit Low-High</option>
+              </TextField>
+              <TextField
+                select
+                size="small"
+                label="Vendor"
+                value={selectedVendor}
+                onChange={(e) => {
+                  setPage(1);
+                  setSelectedVendor(e.target.value);
+                }}
+                SelectProps={{ native: true }}
+              >
+                <option value="">All</option>
+                {vendorOptions.map((vendor) => (
+                  <option key={vendor} value={vendor}>
+                    {vendor}
+                  </option>
+                ))}
+              </TextField>
+              <TextField
+                size="small"
+                type="date"
+                label="From"
+                value={fromDate}
+                onChange={(e) => {
+                  setPage(1);
+                  setFromDate(e.target.value);
+                }}
+                InputLabelProps={{ shrink: true }}
+              />
+              <TextField
+                size="small"
+                type="date"
+                label="To"
+                value={toDate}
+                onChange={(e) => {
+                  setPage(1);
+                  setToDate(e.target.value);
+                }}
+                InputLabelProps={{ shrink: true }}
+              />
+            </Stack>
+
             <Typography variant="h6" mb={2}>
-              Vendor Purchase Ledger
+              Filtered Results: {sortedRows.length}
             </Typography>
 
             <TableContainer sx={{ overflowX: "auto" }}>
-              <Table
-                size="small"
-                sx={{ minWidth: isMobile ? 700 : 1200 }}
-              >
+              <Table size="small" sx={{ minWidth: isMobile ? 700 : 1200 }}>
                 <TableHead>
                   <TableRow>
                     <TableCell>Date</TableCell>
                     <TableCell>Vendor</TableCell>
                     <TableCell>Particular</TableCell>
-                    <TableCell align="right">
-                      Debit (₹)
-                    </TableCell>
-                    <TableCell align="right">
-                      Balance (₹)
-                    </TableCell>
+                    <TableCell align="right">Debit (Rs)</TableCell>
+                    <TableCell align="right">Balance (Rs)</TableCell>
                   </TableRow>
                 </TableHead>
 
                 <TableBody>
-                  {ledgerRows.length === 0 && (
+                  {pagedRows.length === 0 && (
                     <TableRow>
                       <TableCell colSpan={5} align="center">
                         No purchases found
@@ -216,22 +355,31 @@ export default function VendorLedger() {
                     </TableRow>
                   )}
 
-                  {ledgerRows.map((r, i) => (
-                    <TableRow key={i}>
-                      <TableCell>{r.date}</TableCell>
-                      <TableCell>{r.vendor}</TableCell>
-                      <TableCell>{r.particular}</TableCell>
-                      <TableCell align="right">
-                        ₹{r.debit.toFixed(2)}
-                      </TableCell>
-                      <TableCell align="right">
-                        ₹{r.balance.toFixed(2)}
-                      </TableCell>
+                  {pagedRows.map((row) => (
+                    <TableRow key={row.id}>
+                      <TableCell>{row.date}</TableCell>
+                      <TableCell>{row.vendor}</TableCell>
+                      <TableCell>{row.particular}</TableCell>
+                      <TableCell align="right">Rs {row.debit.toFixed(2)}</TableCell>
+                      <TableCell align="right">Rs {row.balance.toFixed(2)}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
               </Table>
             </TableContainer>
+
+            <Stack direction="row" spacing={2} justifyContent="flex-end" mt={2}>
+              <Button disabled={page === 1} onClick={() => setPage(page - 1)}>
+                Prev
+              </Button>
+              <Typography>Page {page}</Typography>
+              <Button
+                disabled={page * limit >= sortedRows.length}
+                onClick={() => setPage(page + 1)}
+              >
+                Next
+              </Button>
+            </Stack>
           </Paper>
         </Grid>
       </Grid>

@@ -1,125 +1,191 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Box,
+  Button,
+  Checkbox,
   Grid,
   Paper,
-  Typography,
+  Stack,
   Table,
+  TableBody,
+  TableCell,
+  TableContainer,
   TableHead,
   TableRow,
-  TableCell,
-  TableBody,
-  TableContainer,
-  useTheme,
+  TextField,
+  Typography,
   useMediaQuery,
+  useTheme,
 } from "@mui/material";
 import {
-  AreaChart,
   Area,
+  AreaChart,
+  Cell,
+  Pie,
+  PieChart,
+  ResponsiveContainer,
+  Tooltip,
   XAxis,
   YAxis,
-  Tooltip,
-  PieChart,
-  Pie,
-  Cell,
-  ResponsiveContainer,
 } from "recharts";
+import customFetch from "../../utils/customFetch";
+import {
+  exportLedgerToExcel,
+  exportLedgerToPdf,
+  filterLedgerRows,
+  formatDateTime,
+  paginateRows,
+  sortLedgerRows,
+} from "./ledgerHelpers";
 
 const COLORS = ["#1976d2", "#2e7d32", "#f57c00", "#6a1b9a", "#c2185b"];
+const clampWidthCh = (len, min = 10, max = 32) => `${Math.min(Math.max(len, min), max)}ch`;
 
 export default function SalesLedger() {
-  const [monthlySales, setMonthlySales] = useState([]);
-  const [customerSales, setCustomerSales] = useState([]);
-  const [salesTable, setSalesTable] = useState([]);
+  const [allRows, setAllRows] = useState([]);
+  const [search, setSearch] = useState("");
+  const [sort, setSort] = useState("-dateRaw");
+  const [fromDate, setFromDate] = useState("");
+  const [toDate, setToDate] = useState("");
+  const [selectedCustomer, setSelectedCustomer] = useState("");
+  const [showWithoutGst, setShowWithoutGst] = useState(false);
+  const [page, setPage] = useState(1);
+  const [limit] = useState(10);
+  const amountPrefix = showWithoutGst ? "Rs " : "₹";
 
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
   useEffect(() => {
-    const sales = JSON.parse(localStorage.getItem("sales")) || [];
+    const fetchSales = async () => {
+      try {
+        const { data } = await customFetch.get("/sales");
+        const sales = data?.sales || [];
 
-    // TABLE DATA
-    setSalesTable(
-      sales.map((s) => ({
-        date: s.date,
-        customer: s.customer,
-        items: s.items.length,
-        qty: s.items.reduce((a, b) => a + b.qty, 0),
-        total: s.grandTotal,
-      }))
-    );
+        const rows = sales.map((sale) => ({
+          id: sale._id,
+          dateRaw: sale.createdAt,
+          date: formatDateTime(sale.createdAt),
+          customer: sale.customer?.name || "Walk-in",
+          items: sale.items?.length || 0,
+          qty: (sale.items || []).reduce((sum, item) => sum + Number(item.qty || 0), 0),
+          total: Number(sale.grandTotal || 0),
+          mode: sale.gstMode || "with",
+        }));
 
-    // MONTHLY SALES
-    const monthMap = {};
-    sales.forEach((s) => {
-      const d = new Date(s.date);
-      const key = `${d.toLocaleString("default", {
-        month: "short",
-      })} ${d.getFullYear()}`;
+        setAllRows(rows);
+      } catch {
+        setAllRows([]);
+      }
+    };
 
-      monthMap[key] = (monthMap[key] || 0) + s.grandTotal;
-    });
-
-    setMonthlySales(
-      Object.keys(monthMap).map((m) => ({
-        month: m,
-        amount: monthMap[m],
-      }))
-    );
-
-    // CUSTOMER SALES
-    const custMap = {};
-    sales.forEach((s) => {
-      custMap[s.customer] =
-        (custMap[s.customer] || 0) + s.grandTotal;
-    });
-
-    setCustomerSales(
-      Object.keys(custMap).map((c) => ({
-        name: c,
-        value: custMap[c],
-      }))
-    );
+    fetchSales();
   }, []);
+
+  const customerOptions = useMemo(
+    () =>
+      [...new Set(allRows.map((row) => row.customer))]
+        .filter(Boolean)
+        .sort((a, b) => a.localeCompare(b)),
+    [allRows]
+  );
+  const customerFieldWidth = useMemo(() => {
+    const maxLen = customerOptions.reduce((acc, name) => Math.max(acc, name.length), 3);
+    return clampWidthCh(maxLen + 4);
+  }, [customerOptions]);
+
+  const filteredRows = useMemo(
+    () =>
+      filterLedgerRows({
+        rows: allRows,
+        search,
+        fromDate,
+        toDate,
+        searchFields: ["customer"],
+        exactFilters: {
+          customer: selectedCustomer,
+          mode: showWithoutGst ? "without" : "with",
+        },
+      }),
+    [allRows, search, fromDate, toDate, selectedCustomer, showWithoutGst]
+  );
+
+  const sortedRows = useMemo(
+    () => sortLedgerRows(filteredRows, sort),
+    [filteredRows, sort]
+  );
+
+  const pagedRows = useMemo(
+    () => paginateRows(sortedRows, page, limit),
+    [sortedRows, page, limit]
+  );
+
+  const monthlySales = useMemo(() => {
+    const monthMap = {};
+
+    filteredRows.forEach((row) => {
+      const date = new Date(row.dateRaw);
+      if (Number.isNaN(date.getTime())) return;
+
+      const key = `${date.toLocaleString("default", { month: "short" })} ${date.getFullYear()}`;
+      monthMap[key] = (monthMap[key] || 0) + row.total;
+    });
+
+    return Object.keys(monthMap).map((month) => ({
+      month,
+      amount: monthMap[month],
+    }));
+  }, [filteredRows]);
+
+  const customerSales = useMemo(() => {
+    const map = {};
+
+    filteredRows.forEach((row) => {
+      map[row.customer] = (map[row.customer] || 0) + row.total;
+    });
+
+    return Object.keys(map).map((name) => ({ name, value: map[name] }));
+  }, [filteredRows]);
+
+  const exportColumns = [
+    { label: "Date", key: "date" },
+    { label: "Customer", key: "customer" },
+    { label: "Items", key: "items" },
+    { label: "Total Qty", key: "qty" },
+    { label: "Grand Total", value: (row) => row.total.toFixed(2) },
+  ];
 
   return (
     <Box sx={{ width: "100%", p: { xs: 2, md: 3 } }}>
+      <Grid container spacing={2} sx={{ mb: 2 }}>
+        <Grid item xs={12}>
+          <Typography
+            variant="h4"
+            fontWeight="bold"
+            sx={{ textAlign: { xs: "center", md: "left" } }}
+          >
+            Sales Ledger
+          </Typography>
 
-{/* 🔷 PAGE HEADING */}
-<Grid container spacing={2} sx={{ mb: 2 }}>
-  <Grid item xs={12}>
-    <Typography
-      variant="h4"
-      fontWeight="bold"
-      sx={{ textAlign: { xs: "center", md: "left" } }}
-    >
-      Sales Ledger
-    </Typography>
-
-    <Typography
-      variant="body2"
-      color="text.secondary"
-      sx={{ textAlign: { xs: "center", md: "left" } }}
-    >
-      Monthly trends, customer-wise distribution, and detailed sales history
-    </Typography>
-  </Grid>
-</Grid>
-
+          <Typography
+            variant="body2"
+            color="text.secondary"
+            sx={{ textAlign: { xs: "center", md: "left" } }}
+          >
+            Monthly trends, customer-wise distribution, and detailed sales history
+          </Typography>
+        </Grid>
+      </Grid>
 
       <Grid container spacing={3}>
-        {/* 📈 MONTHLY SALES TREND */}
-        <Grid item xs={12} lg={6} sx={{width:500}}>
+        <Grid item xs={12} lg={6} sx={{ width: 500 }}>
           <Paper sx={{ p: 3, height: 360 }}>
             <Typography variant="h6" mb={2}>
               Monthly Sales Trend
             </Typography>
 
             <ResponsiveContainer width="100%" height="100%">
-              <AreaChart
-                data={monthlySales}
-                margin={{ top: 20, right: 20, left: 10, bottom: 60 }}
-              >
+              <AreaChart data={monthlySales} margin={{ top: 20, right: 20, left: 10, bottom: 60 }}>
                 <XAxis
                   dataKey="month"
                   angle={-30}
@@ -130,20 +196,13 @@ export default function SalesLedger() {
                 />
                 <YAxis />
                 <Tooltip />
-                <Area
-                  type="monotone"
-                  dataKey="amount"
-                  stroke="#1976d2"
-                  fill="#bbdefb"
-                  strokeWidth={3}
-                />
+                <Area type="monotone" dataKey="amount" stroke="#1976d2" fill="#bbdefb" strokeWidth={3} />
               </AreaChart>
             </ResponsiveContainer>
           </Paper>
         </Grid>
 
-        {/* 🍩 CUSTOMER-WISE SALES */}
-        <Grid item xs={12} lg={6} sx={{width:500}}>
+        <Grid item xs={12} lg={6} sx={{ width: 500 }}>
           <Paper sx={{ p: 3, height: 360 }}>
             <Typography variant="h6" mb={2}>
               Customer-wise Sales
@@ -171,49 +230,183 @@ export default function SalesLedger() {
           </Paper>
         </Grid>
 
-        {/* 📋 SALES TABLE */}
-        <Grid item xs={12} sx={{width:1100}}>
+        <Grid item xs={12} sx={{ width: 1100 }}>
           <Paper sx={{ p: 3 }}>
-            <Typography variant="h6" mb={2}>
-              Sales Ledger (Detailed)
-            </Typography>
-
-            <TableContainer
-              sx={{
-                overflowX: isMobile ? "auto" : "hidden",
-              }}
+            <Stack
+              direction={{ xs: "column", md: "row" }}
+              spacing={2}
+              justifyContent="space-between"
+              mb={2}
             >
-              <Table
+              <Typography variant="h6">Sales Ledger (Detailed)</Typography>
+              <Stack direction={{ xs: "column", sm: "row" }} spacing={1}>
+                <Button
+                  variant="outlined"
+                  onClick={() =>
+                    exportLedgerToExcel({
+                      rows: sortedRows,
+                      columns: exportColumns,
+                      fileName: "sales-ledger",
+                    })
+                  }
+                >
+                  Export Excel
+                </Button>
+                <Button
+                  variant="outlined"
+                  onClick={() =>
+                    exportLedgerToPdf({
+                      rows: sortedRows,
+                      columns: exportColumns,
+                      title: "Sales Ledger",
+                      fileName: "sales-ledger",
+                    })
+                  }
+                >
+                  Export PDF
+                </Button>
+              </Stack>
+            </Stack>
+
+            <Stack direction={{ xs: "column", md: "row" }} spacing={2} mb={2}>
+              <TextField
                 size="small"
-                sx={{ minWidth: isMobile ? 700 : "100%" }}
+                placeholder="Search customer"
+                value={search}
+                onChange={(e) => {
+                  setPage(1);
+                  setSearch(e.target.value);
+                }}
+              />
+              <TextField
+                select
+                size="small"
+                label="Sort"
+                value={sort}
+                onChange={(e) => {
+                  setPage(1);
+                  setSort(e.target.value);
+                }}
+                SelectProps={{ native: true }}
               >
+                <option value="-dateRaw">Newest</option>
+                <option value="dateRaw">Oldest</option>
+                <option value="customer">Customer A-Z</option>
+                <option value="-customer">Customer Z-A</option>
+                <option value="-total">Total High-Low</option>
+                <option value="total">Total Low-High</option>
+                <option value="-qty">Qty High-Low</option>
+                <option value="qty">Qty Low-High</option>
+              </TextField>
+              <TextField
+                select
+                size="small"
+                label="Customer"
+                value={selectedCustomer}
+                onChange={(e) => {
+                  setPage(1);
+                  setSelectedCustomer(e.target.value);
+                }}
+                SelectProps={{ native: true }}
+                sx={{
+                  width: { xs: "100%", md: customerFieldWidth },
+                  maxWidth: "100%",
+                }}
+              >
+                <option value="">All</option>
+                {customerOptions.map((customer) => (
+                  <option key={customer} value={customer}>
+                    {customer}
+                  </option>
+                ))}
+              </TextField>
+              <TextField
+                size="small"
+                type="date"
+                label="From"
+                value={fromDate}
+                onChange={(e) => {
+                  setPage(1);
+                  setFromDate(e.target.value);
+                }}
+                InputLabelProps={{ shrink: true }}
+              />
+              <TextField
+                size="small"
+                type="date"
+                label="To"
+                value={toDate}
+                onChange={(e) => {
+                  setPage(1);
+                  setToDate(e.target.value);
+                }}
+                InputLabelProps={{ shrink: true }}
+              />
+            </Stack>
+
+            <Stack direction="row" alignItems="center" spacing={1}>
+              <Typography variant="h6">Filtered Results: {sortedRows.length}</Typography>
+            </Stack>
+            <Stack direction="row" alignItems="center" spacing={1} mb={2}>
+              <Checkbox
+                checked={showWithoutGst}
+                onChange={(e) => {
+                  setPage(1);
+                  setShowWithoutGst(e.target.checked);
+                }}
+                inputProps={{ "aria-label": "toggle gst mode" }}
+              />
+            </Stack>
+
+            <TableContainer sx={{ overflowX: isMobile ? "auto" : "hidden" }}>
+              <Table size="small" sx={{ minWidth: isMobile ? 700 : "100%" }}>
                 <TableHead>
                   <TableRow>
-                    <TableCell>Date</TableCell>
+                    <TableCell align="center">Date</TableCell>
                     <TableCell>Customer</TableCell>
                     <TableCell align="center">Items</TableCell>
                     <TableCell align="center">Total Qty</TableCell>
-                    <TableCell align="right">
-                      Grand Total (₹)
-                    </TableCell>
+                    <TableCell align="right">Grand Total</TableCell>
                   </TableRow>
                 </TableHead>
 
                 <TableBody>
-                  {salesTable.map((s, i) => (
-                    <TableRow key={i}>
-                      <TableCell>{s.date}</TableCell>
-                      <TableCell>{s.customer}</TableCell>
-                      <TableCell align="center">{s.items}</TableCell>
-                      <TableCell align="center">{s.qty}</TableCell>
+                  {pagedRows.length === 0 && (
+                    <TableRow>
+                      <TableCell colSpan={5} align="center">
+                        No sales records found
+                      </TableCell>
+                    </TableRow>
+                  )}
+
+                  {pagedRows.map((row) => (
+                    <TableRow key={row.id}>
+                      <TableCell align="center">{row.date}</TableCell>
+                      <TableCell>{row.customer}</TableCell>
+                      <TableCell align="center">{row.items}</TableCell>
+                      <TableCell align="center">{row.qty}</TableCell>
                       <TableCell align="right">
-                        ₹{s.total.toFixed(2)}
+                        {amountPrefix}
+                        {row.total.toFixed(2)}
                       </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
               </Table>
             </TableContainer>
+
+            <Stack direction="row" spacing={2} justifyContent="flex-end" mt={2}>
+              <Button disabled={page === 1} onClick={() => setPage(page - 1)}>
+                Prev
+              </Button>
+              <Typography>Page {page}</Typography>
+              <Button
+                disabled={page * limit >= sortedRows.length}
+                onClick={() => setPage(page + 1)}
+              >
+                Next
+              </Button>
+            </Stack>
           </Paper>
         </Grid>
       </Grid>

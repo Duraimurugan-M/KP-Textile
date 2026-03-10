@@ -1,101 +1,160 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Box,
+  Button,
   Grid,
   Paper,
-  Typography,
+  Stack,
   Table,
+  TableBody,
+  TableCell,
+  TableContainer,
   TableHead,
   TableRow,
-  TableCell,
-  TableBody,
-  TableContainer,
-  useTheme,
+  TextField,
+  Typography,
   useMediaQuery,
+  useTheme,
 } from "@mui/material";
 import {
-  BarChart,
   Bar,
+  BarChart,
+  Cell,
+  Pie,
+  PieChart,
+  ResponsiveContainer,
+  Tooltip,
   XAxis,
   YAxis,
-  Tooltip,
-  PieChart,
-  Pie,
-  Cell,
-  ResponsiveContainer,
 } from "recharts";
+import customFetch from "../../utils/customFetch";
+import {
+  exportLedgerToExcel,
+  exportLedgerToPdf,
+  filterLedgerRows,
+  formatDateTime,
+  paginateRows,
+  sortLedgerRows,
+} from "./ledgerHelpers";
 
 const COLORS = ["#1976d2", "#2e7d32", "#f57c00", "#6a1b9a", "#c2185b"];
 
 export default function CustomerLedger() {
-  const [ledgerRows, setLedgerRows] = useState([]);
-  const [summary, setSummary] = useState([]);
-  const [topCustomer, setTopCustomer] = useState(null);
+  const [allRows, setAllRows] = useState([]);
+  const [search, setSearch] = useState("");
+  const [sort, setSort] = useState("-dateRaw");
+  const [fromDate, setFromDate] = useState("");
+  const [toDate, setToDate] = useState("");
+  const [selectedCustomer, setSelectedCustomer] = useState("");
+  const [page, setPage] = useState(1);
+  const [limit] = useState(10);
 
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
   useEffect(() => {
-    const sales = JSON.parse(localStorage.getItem("sales")) || [];
+    const fetchSales = async () => {
+      try {
+        const { data } = await customFetch.get("/sales");
+        const sales = data?.sales || [];
 
-    let running = 0;
-    const ledger = sales.map((s) => {
-      running += s.grandTotal;
-      return {
-        date: s.date,
-        customer: s.customer,
-        particular: `Sale #${s.id}`,
-        debit: s.grandTotal,
-        balance: running,
-      };
-    });
+        const mapped = sales
+          .map((sale) => ({
+            id: sale._id,
+            dateRaw: sale.createdAt,
+            date: formatDateTime(sale.createdAt),
+            customer: sale.customer?.name || "Walk-in",
+            particular: `Sale #${sale._id?.slice(-6) || ""}`,
+            debit: Number(sale.grandTotal || 0),
+          }))
+          .sort((a, b) => new Date(a.dateRaw) - new Date(b.dateRaw));
 
-    setLedgerRows(ledger);
+        let running = 0;
+        const ledger = mapped.map((row) => {
+          running += row.debit;
+          return { ...row, balance: running };
+        });
 
-    const map = {};
-    sales.forEach((s) => {
-      map[s.customer] = (map[s.customer] || 0) + s.grandTotal;
-    });
+        setAllRows(ledger);
+      } catch {
+        setAllRows([]);
+      }
+    };
 
-    const summaryArr = Object.keys(map).map((k) => ({
-      name: k,
-      value: map[k],
-    }));
-
-    setSummary(summaryArr);
-
-    if (summaryArr.length) {
-      setTopCustomer(
-        summaryArr.reduce((a, b) => (b.value > a.value ? b : a))
-      );
-    }
+    fetchSales();
   }, []);
 
-  const topFive = [...summary]
-    .sort((a, b) => b.value - a.value)
-    .slice(0, 5);
+  const customerOptions = useMemo(
+    () =>
+      [...new Set(allRows.map((row) => row.customer))]
+        .filter(Boolean)
+        .sort((a, b) => a.localeCompare(b)),
+    [allRows]
+  );
+
+  const filteredRows = useMemo(
+    () =>
+      filterLedgerRows({
+        rows: allRows,
+        search,
+        fromDate,
+        toDate,
+        searchFields: ["customer", "particular"],
+        exactFilters: { customer: selectedCustomer },
+      }),
+    [allRows, search, fromDate, toDate, selectedCustomer]
+  );
+
+  const sortedRows = useMemo(
+    () => sortLedgerRows(filteredRows, sort),
+    [filteredRows, sort]
+  );
+
+  const pagedRows = useMemo(
+    () => paginateRows(sortedRows, page, limit),
+    [sortedRows, page, limit]
+  );
+
+  const summary = useMemo(() => {
+    const map = {};
+    filteredRows.forEach((row) => {
+      map[row.customer] = (map[row.customer] || 0) + row.debit;
+    });
+    return Object.keys(map).map((name) => ({ name, value: map[name] }));
+  }, [filteredRows]);
+
+  const topCustomer = useMemo(() => {
+    if (!summary.length) return null;
+    return summary.reduce((a, b) => (b.value > a.value ? b : a));
+  }, [summary]);
+
+  const topFive = [...summary].sort((a, b) => b.value - a.value).slice(0, 5);
+
+  const exportColumns = [
+    { label: "Date", key: "date" },
+    { label: "Customer", key: "customer" },
+    { label: "Particular", key: "particular" },
+    { label: "Debit", value: (row) => row.debit.toFixed(2) },
+    { label: "Balance", value: (row) => row.balance.toFixed(2) },
+  ];
 
   return (
     <Box sx={{ width: "100%", p: { xs: 2, md: 3 } }}>
       <Grid container spacing={3}>
-        {/* 🔝 TOP CUSTOMER */}
         {topCustomer && (
           <Grid item xs={12}>
             <Paper sx={{ p: 3, bgcolor: "#e3f2fd" }}>
-              <Typography variant="subtitle2">
-                Top Customer
-              </Typography>
+              <Typography variant="subtitle2">Top Customer</Typography>
               <Typography variant="h4" color="primary">
                 {topCustomer.name}
               </Typography>
               <Typography variant="h6">
-                Total Sales: ₹{topCustomer.value.toFixed(2)}
+                Total Sales: Rs {topCustomer.value.toFixed(2)}
               </Typography>
             </Paper>
           </Grid>
         )}
 
-        {/* 📊 TOP 5 BAR CHART (FIXED) */}
         <Grid item xs={12} lg={8}>
           <Paper sx={{ p: 3, height: 380 }}>
             <Typography variant="h6" mb={2}>
@@ -124,17 +183,12 @@ export default function CustomerLedger() {
                 />
                 <YAxis />
                 <Tooltip />
-                <Bar
-                  dataKey="value"
-                  fill="#1976d2"
-                  radius={[6, 6, 0, 0]}
-                />
+                <Bar dataKey="value" fill="#1976d2" radius={[6, 6, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </Paper>
         </Grid>
 
-        {/* 🥧 PIE CHART */}
         <Grid item xs={12} lg={4}>
           <Paper sx={{ p: 3, height: 380 }}>
             <Typography variant="h6" mb={2}>
@@ -151,10 +205,7 @@ export default function CustomerLedger() {
                   label={!isMobile}
                 >
                   {summary.map((_, i) => (
-                    <Cell
-                      key={i}
-                      fill={COLORS[i % COLORS.length]}
-                    />
+                    <Cell key={i} fill={COLORS[i % COLORS.length]} />
                   ))}
                 </Pie>
                 <Tooltip />
@@ -163,49 +214,164 @@ export default function CustomerLedger() {
           </Paper>
         </Grid>
 
-        {/* 📋 LEDGER TABLE */}
         <Grid item xs={12}>
           <Paper sx={{ p: 3 }}>
+            <Stack
+              direction={{ xs: "column", md: "row" }}
+              spacing={2}
+              justifyContent="space-between"
+              mb={2}
+            >
+              <Typography variant="h6">Customer Sales Ledger</Typography>
+              <Stack direction={{ xs: "column", sm: "row" }} spacing={1}>
+                <Button
+                  variant="outlined"
+                  onClick={() =>
+                    exportLedgerToExcel({
+                      rows: sortedRows,
+                      columns: exportColumns,
+                      fileName: "customer-ledger",
+                    })
+                  }
+                >
+                  Export Excel
+                </Button>
+                <Button
+                  variant="outlined"
+                  onClick={() =>
+                    exportLedgerToPdf({
+                      rows: sortedRows,
+                      columns: exportColumns,
+                      title: "Customer Ledger",
+                      fileName: "customer-ledger",
+                    })
+                  }
+                >
+                  Export PDF
+                </Button>
+              </Stack>
+            </Stack>
+
+            <Stack direction={{ xs: "column", md: "row" }} spacing={2} mb={2}>
+              <TextField
+                size="small"
+                placeholder="Search customer or particular"
+                value={search}
+                onChange={(e) => {
+                  setPage(1);
+                  setSearch(e.target.value);
+                }}
+              />
+              <TextField
+                select
+                size="small"
+                label="Sort"
+                value={sort}
+                onChange={(e) => {
+                  setPage(1);
+                  setSort(e.target.value);
+                }}
+                SelectProps={{ native: true }}
+              >
+                <option value="-dateRaw">Newest</option>
+                <option value="dateRaw">Oldest</option>
+                <option value="customer">Customer A-Z</option>
+                <option value="-customer">Customer Z-A</option>
+                <option value="-debit">Debit High-Low</option>
+                <option value="debit">Debit Low-High</option>
+              </TextField>
+              <TextField
+                select
+                size="small"
+                label="Customer"
+                value={selectedCustomer}
+                onChange={(e) => {
+                  setPage(1);
+                  setSelectedCustomer(e.target.value);
+                }}
+                SelectProps={{ native: true }}
+              >
+                <option value="">All</option>
+                {customerOptions.map((customer) => (
+                  <option key={customer} value={customer}>
+                    {customer}
+                  </option>
+                ))}
+              </TextField>
+              <TextField
+                size="small"
+                type="date"
+                label="From"
+                value={fromDate}
+                onChange={(e) => {
+                  setPage(1);
+                  setFromDate(e.target.value);
+                }}
+                InputLabelProps={{ shrink: true }}
+              />
+              <TextField
+                size="small"
+                type="date"
+                label="To"
+                value={toDate}
+                onChange={(e) => {
+                  setPage(1);
+                  setToDate(e.target.value);
+                }}
+                InputLabelProps={{ shrink: true }}
+              />
+            </Stack>
+
             <Typography variant="h6" mb={2}>
-              Customer Sales Ledger
+              Filtered Results: {sortedRows.length}
             </Typography>
 
             <TableContainer sx={{ overflowX: "auto" }}>
-              <Table
-                size="small"
-                sx={{ minWidth: isMobile ? 700 : 1200 }}
-              >
+              <Table size="small" sx={{ minWidth: isMobile ? 700 : 1200 }}>
                 <TableHead>
                   <TableRow>
                     <TableCell>Date</TableCell>
                     <TableCell>Customer</TableCell>
                     <TableCell>Particular</TableCell>
-                    <TableCell align="right">
-                      Debit (₹)
-                    </TableCell>
-                    <TableCell align="right">
-                      Balance (₹)
-                    </TableCell>
+                    <TableCell align="right">Debit (Rs)</TableCell>
+                    <TableCell align="right">Balance (Rs)</TableCell>
                   </TableRow>
                 </TableHead>
 
                 <TableBody>
-                  {ledgerRows.map((r, i) => (
-                    <TableRow key={i}>
-                      <TableCell>{r.date}</TableCell>
-                      <TableCell>{r.customer}</TableCell>
-                      <TableCell>{r.particular}</TableCell>
-                      <TableCell align="right">
-                        ₹{r.debit.toFixed(2)}
+                  {pagedRows.length === 0 && (
+                    <TableRow>
+                      <TableCell colSpan={5} align="center">
+                        No ledger records found
                       </TableCell>
-                      <TableCell align="right">
-                        ₹{r.balance.toFixed(2)}
-                      </TableCell>
+                    </TableRow>
+                  )}
+
+                  {pagedRows.map((row) => (
+                    <TableRow key={row.id}>
+                      <TableCell>{row.date}</TableCell>
+                      <TableCell>{row.customer}</TableCell>
+                      <TableCell>{row.particular}</TableCell>
+                      <TableCell align="right">Rs {row.debit.toFixed(2)}</TableCell>
+                      <TableCell align="right">Rs {row.balance.toFixed(2)}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
               </Table>
             </TableContainer>
+
+            <Stack direction="row" spacing={2} justifyContent="flex-end" mt={2}>
+              <Button disabled={page === 1} onClick={() => setPage(page - 1)}>
+                Prev
+              </Button>
+              <Typography>Page {page}</Typography>
+              <Button
+                disabled={page * limit >= sortedRows.length}
+                onClick={() => setPage(page + 1)}
+              >
+                Next
+              </Button>
+            </Stack>
           </Paper>
         </Grid>
       </Grid>

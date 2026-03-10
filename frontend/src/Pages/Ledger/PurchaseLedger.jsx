@@ -1,104 +1,159 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Box,
+  Button,
   Grid,
   Paper,
-  Typography,
+  Stack,
   Table,
+  TableBody,
+  TableCell,
+  TableContainer,
   TableHead,
   TableRow,
-  TableCell,
-  TableBody,
-  TableContainer,
-  useTheme,
+  TextField,
+  Typography,
   useMediaQuery,
+  useTheme,
 } from "@mui/material";
 import {
-  AreaChart,
   Area,
+  AreaChart,
+  Cell,
+  Pie,
+  PieChart,
+  ResponsiveContainer,
+  Tooltip,
   XAxis,
   YAxis,
-  Tooltip,
-  PieChart,
-  Pie,
-  Cell,
-  ResponsiveContainer,
 } from "recharts";
+import customFetch from "../../utils/customFetch";
+import {
+  exportLedgerToExcel,
+  exportLedgerToPdf,
+  filterLedgerRows,
+  formatDateTime,
+  paginateRows,
+  sortLedgerRows,
+} from "./ledgerHelpers";
 
 const COLORS = ["#d32f2f", "#1976d2", "#2e7d32", "#f57c00", "#6a1b9a"];
 
 export default function PurchaseLedger() {
-  const [monthlyPurchase, setMonthlyPurchase] = useState([]);
-  const [vendorPurchase, setVendorPurchase] = useState([]);
-  const [purchaseTable, setPurchaseTable] = useState([]);
+  const [allRows, setAllRows] = useState([]);
+  const [search, setSearch] = useState("");
+  const [sort, setSort] = useState("-dateRaw");
+  const [fromDate, setFromDate] = useState("");
+  const [toDate, setToDate] = useState("");
+  const [selectedVendor, setSelectedVendor] = useState("");
+  const [page, setPage] = useState(1);
+  const [limit] = useState(10);
 
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
   useEffect(() => {
-    const purchases =
-      JSON.parse(localStorage.getItem("purchases")) || [];
+    const fetchPurchases = async () => {
+      try {
+        const { data } = await customFetch.get("/purchases");
+        const purchases = data?.purchases || [];
 
-    /* ---------------- TABLE DATA ---------------- */
-    setPurchaseTable(
-      purchases.map((p) => ({
-        date: p.date,
-        vendor: p.supplierName,
-        items: p.items.length,
-        qty: p.items.reduce((s, i) => s + i.qty, 0),
-        total: p.items.reduce(
-          (s, i) => s + i.qty * i.price,
-          0
-        ),
-      }))
-    );
+        const rows = purchases.map((purchase) => {
+          const items = purchase.items || [];
+          const qty = items.reduce((sum, item) => sum + Number(item.qty || 0), 0);
+          const total = items.reduce(
+            (sum, item) => sum + Number(item.qty || 0) * Number(item.price || 0),
+            0
+          );
 
-    /* ---------------- MONTHLY PURCHASE ---------------- */
-    const monthMap = {};
-    purchases.forEach((p) => {
-      const d = new Date(p.date);
-      const key = `${d.toLocaleString("default", {
-        month: "short",
-      })} ${d.getFullYear()}`;
+          return {
+            id: purchase._id,
+            dateRaw: purchase.createdAt,
+            date: formatDateTime(purchase.createdAt),
+            vendor: purchase.supplier?.name || "Unknown",
+            items: items.length,
+            qty,
+            total,
+          };
+        });
 
-      const total = p.items.reduce(
-        (s, i) => s + i.qty * i.price,
-        0
-      );
+        setAllRows(rows);
+      } catch {
+        setAllRows([]);
+      }
+    };
 
-      monthMap[key] = (monthMap[key] || 0) + total;
-    });
-
-    setMonthlyPurchase(
-      Object.keys(monthMap).map((m) => ({
-        month: m,
-        amount: monthMap[m],
-      }))
-    );
-
-    /* ---------------- VENDOR WISE PURCHASE ---------------- */
-    const vendorMap = {};
-    purchases.forEach((p) => {
-      const total = p.items.reduce(
-        (s, i) => s + i.qty * i.price,
-        0
-      );
-
-      vendorMap[p.supplierName] =
-        (vendorMap[p.supplierName] || 0) + total;
-    });
-
-    setVendorPurchase(
-      Object.keys(vendorMap).map((v) => ({
-        name: v,
-        value: vendorMap[v],
-      }))
-    );
+    fetchPurchases();
   }, []);
+
+  const vendorOptions = useMemo(
+    () =>
+      [...new Set(allRows.map((row) => row.vendor))]
+        .filter(Boolean)
+        .sort((a, b) => a.localeCompare(b)),
+    [allRows]
+  );
+
+  const filteredRows = useMemo(
+    () =>
+      filterLedgerRows({
+        rows: allRows,
+        search,
+        fromDate,
+        toDate,
+        searchFields: ["vendor"],
+        exactFilters: { vendor: selectedVendor },
+      }),
+    [allRows, search, fromDate, toDate, selectedVendor]
+  );
+
+  const sortedRows = useMemo(
+    () => sortLedgerRows(filteredRows, sort),
+    [filteredRows, sort]
+  );
+
+  const pagedRows = useMemo(
+    () => paginateRows(sortedRows, page, limit),
+    [sortedRows, page, limit]
+  );
+
+  const monthlyPurchase = useMemo(() => {
+    const monthMap = {};
+
+    filteredRows.forEach((row) => {
+      const date = new Date(row.dateRaw);
+      if (Number.isNaN(date.getTime())) return;
+
+      const key = `${date.toLocaleString("default", { month: "short" })} ${date.getFullYear()}`;
+      monthMap[key] = (monthMap[key] || 0) + row.total;
+    });
+
+    return Object.keys(monthMap).map((month) => ({
+      month,
+      amount: monthMap[month],
+    }));
+  }, [filteredRows]);
+
+  const vendorPurchase = useMemo(() => {
+    const map = {};
+
+    filteredRows.forEach((row) => {
+      map[row.vendor] = (map[row.vendor] || 0) + row.total;
+    });
+
+    return Object.keys(map).map((name) => ({ name, value: map[name] }));
+  }, [filteredRows]);
+
+  const exportColumns = [
+    { label: "Date", key: "date" },
+    { label: "Vendor", key: "vendor" },
+    { label: "Items", key: "items" },
+    { label: "Total Qty", key: "qty" },
+    { label: "Total Amount", value: (row) => row.total.toFixed(2) },
+  ];
 
   return (
     <Box sx={{ width: "100%", p: { xs: 2, md: 3 } }}>
-      {/* 🔷 PAGE HEADING */}
       <Grid container spacing={2} sx={{ mb: 2 }}>
         <Grid item xs={12}>
           <Typography
@@ -113,14 +168,12 @@ export default function PurchaseLedger() {
             color="text.secondary"
             sx={{ textAlign: { xs: "center", md: "left" } }}
           >
-            Monthly purchase trends, vendor-wise distribution, and
-            detailed purchase history
+            Monthly purchase trends, vendor-wise distribution, and detailed purchase history
           </Typography>
         </Grid>
       </Grid>
 
       <Grid container spacing={3}>
-        {/* 📈 MONTHLY PURCHASE TREND */}
         <Grid item xs={12} lg={6} width={500}>
           <Paper sx={{ p: 3, height: 360 }}>
             <Typography variant="h6" mb={2}>
@@ -130,12 +183,7 @@ export default function PurchaseLedger() {
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart
                 data={monthlyPurchase}
-                margin={{
-                  top: 20,
-                  right: 20,
-                  left: 10,
-                  bottom: 60,
-                }}
+                margin={{ top: 20, right: 20, left: 10, bottom: 60 }}
               >
                 <XAxis
                   dataKey="month"
@@ -147,19 +195,12 @@ export default function PurchaseLedger() {
                 />
                 <YAxis />
                 <Tooltip />
-                <Area
-                  type="monotone"
-                  dataKey="amount"
-                  stroke="#d32f2f"
-                  fill="#ffcdd2"
-                  strokeWidth={3}
-                />
+                <Area type="monotone" dataKey="amount" stroke="#d32f2f" fill="#ffcdd2" strokeWidth={3} />
               </AreaChart>
             </ResponsiveContainer>
           </Paper>
         </Grid>
 
-        {/* 🍩 VENDOR-WISE PURCHASE */}
         <Grid item xs={12} lg={6} width={500}>
           <Paper sx={{ p: 3, height: 360 }}>
             <Typography variant="h6" mb={2}>
@@ -179,10 +220,7 @@ export default function PurchaseLedger() {
                   label={!isMobile}
                 >
                   {vendorPurchase.map((_, i) => (
-                    <Cell
-                      key={i}
-                      fill={COLORS[i % COLORS.length]}
-                    />
+                    <Cell key={i} fill={COLORS[i % COLORS.length]} />
                   ))}
                 </Pie>
                 <Tooltip />
@@ -191,66 +229,166 @@ export default function PurchaseLedger() {
           </Paper>
         </Grid>
 
-        {/* 📋 PURCHASE TABLE */}
         <Grid item xs={12} width={1100}>
           <Paper sx={{ p: 3 }}>
+            <Stack
+              direction={{ xs: "column", md: "row" }}
+              spacing={2}
+              justifyContent="space-between"
+              mb={2}
+            >
+              <Typography variant="h6">Purchase Ledger (Detailed)</Typography>
+              <Stack direction={{ xs: "column", sm: "row" }} spacing={1}>
+                <Button
+                  variant="outlined"
+                  onClick={() =>
+                    exportLedgerToExcel({
+                      rows: sortedRows,
+                      columns: exportColumns,
+                      fileName: "purchase-ledger",
+                    })
+                  }
+                >
+                  Export Excel
+                </Button>
+                <Button
+                  variant="outlined"
+                  onClick={() =>
+                    exportLedgerToPdf({
+                      rows: sortedRows,
+                      columns: exportColumns,
+                      title: "Purchase Ledger",
+                      fileName: "purchase-ledger",
+                    })
+                  }
+                >
+                  Export PDF
+                </Button>
+              </Stack>
+            </Stack>
+
+            <Stack direction={{ xs: "column", md: "row" }} spacing={2} mb={2}>
+              <TextField
+                size="small"
+                placeholder="Search vendor"
+                value={search}
+                onChange={(e) => {
+                  setPage(1);
+                  setSearch(e.target.value);
+                }}
+              />
+              <TextField
+                select
+                size="small"
+                label="Sort"
+                value={sort}
+                onChange={(e) => {
+                  setPage(1);
+                  setSort(e.target.value);
+                }}
+                SelectProps={{ native: true }}
+              >
+                <option value="-dateRaw">Newest</option>
+                <option value="dateRaw">Oldest</option>
+                <option value="vendor">Vendor A-Z</option>
+                <option value="-vendor">Vendor Z-A</option>
+                <option value="-total">Amount High-Low</option>
+                <option value="total">Amount Low-High</option>
+                <option value="-qty">Qty High-Low</option>
+                <option value="qty">Qty Low-High</option>
+              </TextField>
+              <TextField
+                select
+                size="small"
+                label="Vendor"
+                value={selectedVendor}
+                onChange={(e) => {
+                  setPage(1);
+                  setSelectedVendor(e.target.value);
+                }}
+                SelectProps={{ native: true }}
+              >
+                <option value="">All</option>
+                {vendorOptions.map((vendor) => (
+                  <option key={vendor} value={vendor}>
+                    {vendor}
+                  </option>
+                ))}
+              </TextField>
+              <TextField
+                size="small"
+                type="date"
+                label="From"
+                value={fromDate}
+                onChange={(e) => {
+                  setPage(1);
+                  setFromDate(e.target.value);
+                }}
+                InputLabelProps={{ shrink: true }}
+              />
+              <TextField
+                size="small"
+                type="date"
+                label="To"
+                value={toDate}
+                onChange={(e) => {
+                  setPage(1);
+                  setToDate(e.target.value);
+                }}
+                InputLabelProps={{ shrink: true }}
+              />
+            </Stack>
+
             <Typography variant="h6" mb={2}>
-              Purchase Ledger (Detailed)
+              Filtered Results: {sortedRows.length}
             </Typography>
 
-            <TableContainer
-              sx={{ overflowX: isMobile ? "auto" : "hidden" }}
-            >
-              <Table
-                size="small"
-                sx={{ minWidth: isMobile ? 700 : "100%" }}
-              >
+            <TableContainer sx={{ overflowX: isMobile ? "auto" : "hidden" }}>
+              <Table size="small" sx={{ minWidth: isMobile ? 700 : "100%" }}>
                 <TableHead>
                   <TableRow>
                     <TableCell>Date</TableCell>
                     <TableCell>Vendor</TableCell>
-                    <TableCell align="center">
-                      Items
-                    </TableCell>
-                    <TableCell align="center">
-                      Total Qty
-                    </TableCell>
-                    <TableCell align="right">
-                      Total Amount (₹)
-                    </TableCell>
+                    <TableCell align="center">Items</TableCell>
+                    <TableCell align="center">Total Qty</TableCell>
+                    <TableCell align="right">Total Amount (Rs)</TableCell>
                   </TableRow>
                 </TableHead>
 
                 <TableBody>
-                  {purchaseTable.length === 0 && (
+                  {pagedRows.length === 0 && (
                     <TableRow>
-                      <TableCell
-                        colSpan={5}
-                        align="center"
-                      >
+                      <TableCell colSpan={5} align="center">
                         No purchases found
                       </TableCell>
                     </TableRow>
                   )}
 
-                  {purchaseTable.map((p, i) => (
-                    <TableRow key={i}>
-                      <TableCell>{p.date}</TableCell>
-                      <TableCell>{p.vendor}</TableCell>
-                      <TableCell align="center">
-                        {p.items}
-                      </TableCell>
-                      <TableCell align="center">
-                        {p.qty}
-                      </TableCell>
-                      <TableCell align="right">
-                        ₹{p.total.toFixed(2)}
-                      </TableCell>
+                  {pagedRows.map((row) => (
+                    <TableRow key={row.id}>
+                      <TableCell>{row.date}</TableCell>
+                      <TableCell>{row.vendor}</TableCell>
+                      <TableCell align="center">{row.items}</TableCell>
+                      <TableCell align="center">{row.qty}</TableCell>
+                      <TableCell align="right">Rs {row.total.toFixed(2)}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
               </Table>
             </TableContainer>
+
+            <Stack direction="row" spacing={2} justifyContent="flex-end" mt={2}>
+              <Button disabled={page === 1} onClick={() => setPage(page - 1)}>
+                Prev
+              </Button>
+              <Typography>Page {page}</Typography>
+              <Button
+                disabled={page * limit >= sortedRows.length}
+                onClick={() => setPage(page + 1)}
+              >
+                Next
+              </Button>
+            </Stack>
           </Paper>
         </Grid>
       </Grid>
