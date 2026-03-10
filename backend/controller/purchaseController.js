@@ -49,7 +49,7 @@ export const createPurchase = async (req, res) => {
       const updatedProduct = await Product.findByIdAndUpdate(
         item.product,
         { $inc: { stock: item.qty } },
-        { new: true }
+        { returnDocument: "after" }
       );
 
       if (!updatedProduct) {
@@ -121,7 +121,7 @@ export const updatePurchase = async (req, res) => {
       const updatedProduct = await Product.findByIdAndUpdate(
         item.product,
         { $inc: { stock: item.qty } },
-        { new: true }
+        { returnDocument: "after" }
       );
 
       if (!updatedProduct) {
@@ -139,7 +139,7 @@ export const updatePurchase = async (req, res) => {
         items: normalizedItems,
         totalAmount: total,
       },
-      { new: true }
+      { returnDocument: "after" }
     );
 
     res.status(200).json({ success: true, updated });

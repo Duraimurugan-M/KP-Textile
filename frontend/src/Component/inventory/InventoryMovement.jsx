@@ -171,7 +171,7 @@ export default function InventoryMovement({
   return (
     <Paper sx={{ p: 3, mt: 3 }}>
       <Stack
-        direction="row"
+        direction={{ xs: "column", sm: "row" }}
         spacing={2}
         justifyContent="space-between"
         alignItems="center"
@@ -181,7 +181,7 @@ export default function InventoryMovement({
           Inventory Movement
         </Typography>
 
-        <Stack direction="row" spacing={2}>
+        <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
           <TextField
             size="small"
             placeholder="Search"
@@ -302,7 +302,13 @@ export default function InventoryMovement({
         </Table>
       </TableContainer>
 
-      <Stack direction="row" spacing={2} justifyContent="flex-end" alignItems="center" mt={2}>
+      <Stack
+        direction={{ xs: "column", sm: "row" }}
+        spacing={2}
+        justifyContent="flex-end"
+        alignItems="center"
+        mt={2}
+      >
         <TextField
           select
           size="small"

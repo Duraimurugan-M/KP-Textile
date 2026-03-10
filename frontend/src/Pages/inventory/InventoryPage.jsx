@@ -4,6 +4,7 @@ import InventorySummary from "../../Component/inventory/InventorySummary";
 import InventoryTable from "../../Component/inventory/InvnentoryTable";
 import InventoryMovement from "../../Component/inventory/InventoryMovement";
 import customFetch from "../../utils/customFetch";
+import { toast } from "react-toastify";
 
 export default function InventoryPage() {
   const [products, setProducts] = useState([]);
@@ -36,6 +37,7 @@ export default function InventoryPage() {
         setSales(salesRes.data?.sales || []);
       } catch (error) {
         console.error("Failed to load inventory data:", error);
+        toast.error("Failed to load inventory data");
         setProducts([]);
         setPurchases([]);
         setSales([]);

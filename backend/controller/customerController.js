@@ -99,7 +99,7 @@ export const updateCustomer = async (req, res) => {
       req.params.id,
       cleanedData,
       {
-        new: true,
+        returnDocument: "after",
         runValidators: true,
       }
     );

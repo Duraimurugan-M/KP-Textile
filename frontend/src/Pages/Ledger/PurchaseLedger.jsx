@@ -28,6 +28,7 @@ import {
   YAxis,
 } from "recharts";
 import customFetch from "../../utils/customFetch";
+import { toast } from "react-toastify";
 import {
   exportLedgerToExcel,
   exportLedgerToPdf,
@@ -93,6 +94,7 @@ export default function PurchaseLedger() {
 
         setAllRows(rows);
       } catch {
+        toast.error("Failed to load purchase ledger");
         setAllRows([]);
       }
     };
@@ -175,8 +177,8 @@ export default function PurchaseLedger() {
 
   return (
     <Box sx={{ width: "100%", p: { xs: 2, md: 3 } }}>
-      <Grid container spacing={2} sx={{ mb: 2 }}>
-        <Grid item xs={12}>
+      <Grid container spacing={2} sx={{ mb: 2, width: "100%", m: 0 }}>
+        <Grid size={{ xs: 12 }}>
           <Typography
             variant="h4"
             fontWeight="bold"
@@ -194,63 +196,67 @@ export default function PurchaseLedger() {
         </Grid>
       </Grid>
 
-      <Grid container spacing={3}>
-        <Grid item xs={12} lg={6} width={500}>
-          <Paper sx={{ p: 3, height: 360 }}>
+      <Grid container spacing={3} sx={{ width: "100%", m: 0 }} alignItems="stretch">
+        <Grid size={{ xs: 12, lg: 6 }}>
+          <Paper sx={{ p: 3, height: 360, display: "flex", flexDirection: "column" }}>
             <Typography variant="h6" mb={2}>
               Monthly Purchase Trend
             </Typography>
 
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart
-                data={monthlyPurchase}
-                margin={{ top: 20, right: 20, left: 10, bottom: 60 }}
-              >
-                <XAxis
-                  dataKey="month"
-                  angle={-30}
-                  textAnchor="end"
-                  interval={0}
-                  height={60}
-                  tick={{ fontSize: isMobile ? 10 : 12 }}
-                />
-                <YAxis />
-                <Tooltip />
-                <Area type="monotone" dataKey="amount" stroke="#d32f2f" fill="#ffcdd2" strokeWidth={3} />
-              </AreaChart>
-            </ResponsiveContainer>
+            <Box sx={{ flex: 1, minHeight: 0 }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart
+                  data={monthlyPurchase}
+                  margin={{ top: 20, right: 20, left: 10, bottom: 60 }}
+                >
+                  <XAxis
+                    dataKey="month"
+                    angle={-30}
+                    textAnchor="end"
+                    interval={0}
+                    height={60}
+                    tick={{ fontSize: isMobile ? 10 : 12 }}
+                  />
+                  <YAxis />
+                  <Tooltip />
+                  <Area type="monotone" dataKey="amount" stroke="#d32f2f" fill="#ffcdd2" strokeWidth={3} />
+                </AreaChart>
+              </ResponsiveContainer>
+            </Box>
           </Paper>
         </Grid>
 
-        <Grid item xs={12} lg={6} width={500}>
-          <Paper sx={{ p: 3, height: 360 }}>
+        <Grid size={{ xs: 12, lg: 6 }}>
+          <Paper sx={{ p: 3, height: 360, display: "flex", flexDirection: "column" }}>
             <Typography variant="h6" mb={2}>
               Supplier-wise Purchase
             </Typography>
 
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={vendorPurchase}
-                  dataKey="value"
-                  nameKey="name"
-                  innerRadius={isMobile ? 55 : 75}
-                  outerRadius={isMobile ? 95 : 120}
-                  cx="50%"
-                  cy="50%"
-                  label={!isMobile}
-                >
-                  {vendorPurchase.map((_, i) => (
-                    <Cell key={i} fill={COLORS[i % COLORS.length]} />
-                  ))}
-                </Pie>
-                <Tooltip />
-              </PieChart>
-            </ResponsiveContainer>
+            <Box sx={{ flex: 1, minHeight: 0 }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={vendorPurchase}
+                    dataKey="value"
+                    nameKey="name"
+                    innerRadius={isMobile ? 55 : 75}
+                    outerRadius={isMobile ? 95 : 120}
+                    cx="50%"
+                    cy="50%"
+                    label={!isMobile}
+                  >
+                    {vendorPurchase.map((_, i) => (
+                      <Cell key={i} fill={COLORS[i % COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip />
+                </PieChart>
+              </ResponsiveContainer>
+            </Box>
           </Paper>
         </Grid>
 
-        <Grid item xs={12} width={1100}>
+        <Grid size={{ xs: 12 }}>
           <Paper sx={{ p: 3 }}>
             <Stack
               direction={{ xs: "column", md: "row" }}

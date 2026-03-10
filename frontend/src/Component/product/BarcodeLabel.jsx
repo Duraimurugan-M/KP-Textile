@@ -1,6 +1,7 @@
 import { Box, Typography, Button } from "@mui/material";
 import Barcode from "react-barcode";
 import html2canvas from "html2canvas";
+import { toast } from "react-toastify";
 
 export default function BarcodeLabel({ product }) {
 
@@ -46,6 +47,7 @@ const printBarcode = async () => {
 
   } catch (error) {
     console.error(error);
+    toast.error("Failed to generate barcode print preview");
   }
 };
 
@@ -69,7 +71,7 @@ const printBarcode = async () => {
 
         <Typography fontSize={7}>{product.name}</Typography>
 
-        <Typography fontSize={10} fontWeight="bold">MRP ₹{product.price}</Typography>
+        <Typography fontSize={10} fontWeight="bold">MRP Rs {product.price}</Typography>
 
         <Barcode
           value={product.productCode}

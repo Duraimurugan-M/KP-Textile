@@ -37,7 +37,7 @@ export default function InventoryTable({
   return (
     <>
       <Stack
-        direction="row"
+        direction={{ xs: "column", sm: "row" }}
         spacing={2}
         justifyContent="space-between"
         alignItems="center"
@@ -45,7 +45,7 @@ export default function InventoryTable({
       >
         <Typography variant="h6">Current Stock</Typography>
 
-        <Stack direction="row" spacing={2}>
+        <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
           <TextField
             size="small"
             placeholder="Search"
@@ -119,7 +119,13 @@ export default function InventoryTable({
         </Table>
       </TableContainer>
 
-      <Stack direction="row" spacing={2} justifyContent="flex-end" alignItems="center" mt={2}>
+      <Stack
+        direction={{ xs: "column", sm: "row" }}
+        spacing={2}
+        justifyContent="flex-end"
+        alignItems="center"
+        mt={2}
+      >
         <TextField
           select
           size="small"

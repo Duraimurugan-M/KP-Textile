@@ -32,7 +32,7 @@ export default function VendorList({
     <Paper sx={{ p: 3 }}>
       {/* 🔥 SEARCH + SORT INSIDE CARD */}
       <Stack
-        direction="row"
+        direction={{ xs: "column", sm: "row" }}
         spacing={2}
         justifyContent="space-between"
         mb={2}
@@ -41,7 +41,7 @@ export default function VendorList({
           Supplier List
         </Typography>
 
-        <Stack direction="row" spacing={2}>
+        <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
           <TextField
             size="small"
             placeholder="Search"
@@ -119,7 +119,7 @@ export default function VendorList({
 
       {/* 🔥 PAGINATION RIGHT CORNER */}
       <Stack
-        direction="row"
+        direction={{ xs: "column", sm: "row" }}
         spacing={2}
         justifyContent="flex-end"
         alignItems="center"
