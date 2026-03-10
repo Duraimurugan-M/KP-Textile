@@ -27,7 +27,7 @@ export default function VendorModule() {
   const [editId, setEditId] = useState(null);
 
   const [page, setPage] = useState(1);
-  const [limit] = useState(10);
+  const [limit, setLimit] = useState(10);
   const [search, setSearch] = useState("");
   const [sort, setSort] = useState("");
   const [total, setTotal] = useState(0);
@@ -50,7 +50,7 @@ export default function VendorModule() {
 
   useEffect(() => {
     fetchVendors();
-  }, [page, search, sort]);
+  }, [page, limit, search, sort]);
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -120,6 +120,7 @@ export default function VendorModule() {
         page={page}
         setPage={setPage}
         limit={limit}
+        setLimit={setLimit}
         total={total}
         onEdit={handleEdit}
         onDelete={handleDeleteVendor}

@@ -22,8 +22,11 @@ export default function PurchaseList({
   page,
   setPage,
   limit,
+  setLimit,
   total,
 }) {
+  const totalPages = Math.max(1, Math.ceil(total / limit));
+
   const getSupplierName = (purchase) => {
     if (purchase?.supplier && typeof purchase.supplier === "object") {
       return purchase.supplier.name || "Unknown";
@@ -205,8 +208,27 @@ export default function PurchaseList({
         direction="row"
         spacing={2}
         justifyContent="flex-end"
+        alignItems="center"
         mt={2}
       >
+        <TextField
+          select
+          size="small"
+          label="Rows"
+          value={limit}
+          onChange={(e) => {
+            setPage(1);
+            setLimit?.(Number(e.target.value));
+          }}
+          SelectProps={{ native: true }}
+          sx={{ width: 100 }}
+        >
+          <option value={10}>10</option>
+          <option value={50}>50</option>
+          <option value={75}>75</option>
+          <option value={100}>100</option>
+        </TextField>
+
         <Button
           disabled={page === 1}
           onClick={() => setPage(page - 1)}
@@ -214,7 +236,7 @@ export default function PurchaseList({
           Prev
         </Button>
 
-        <Typography>Page {page}</Typography>
+        <Typography>Page {page} of {totalPages}</Typography>
 
         <Button
           disabled={page * limit >= total}

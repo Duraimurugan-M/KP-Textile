@@ -20,7 +20,7 @@ export default function ProductPage() {
   const [search, setSearch] = useState("");
   const [sort, setSort] = useState("");
   const [page, setPage] = useState(1);
-  const [limit] = useState(10);
+  const [limit, setLimit] = useState(10);
   const [excelFile, setExcelFile] = useState(null);
 
   const [editProduct, setEditProduct] = useState(null);
@@ -476,6 +476,7 @@ export default function ProductPage() {
           page={page}
           setPage={setPage}
           limit={limit}
+          setLimit={setLimit}
           total={total}
         />
       </Paper>

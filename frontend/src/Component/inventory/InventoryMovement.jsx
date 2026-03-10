@@ -28,6 +28,7 @@ export default function InventoryMovement({
   page = 1,
   setPage,
   limit = 10,
+  setLimit,
 }) {
   const productRows = products.map((product) => ({
     id: `product-${product._id || product.id}`,
@@ -160,6 +161,7 @@ export default function InventoryMovement({
   }
 
   const total = movements.length;
+  const totalPages = Math.max(1, Math.ceil(total / limit));
 
   const paginatedMovements = movements.slice(
     (page - 1) * limit,
@@ -300,12 +302,30 @@ export default function InventoryMovement({
         </Table>
       </TableContainer>
 
-      <Stack direction="row" spacing={2} justifyContent="flex-end" mt={2}>
+      <Stack direction="row" spacing={2} justifyContent="flex-end" alignItems="center" mt={2}>
+        <TextField
+          select
+          size="small"
+          label="Rows"
+          value={limit}
+          onChange={(e) => {
+            setPage(1);
+            setLimit?.(Number(e.target.value));
+          }}
+          SelectProps={{ native: true }}
+          sx={{ width: 100 }}
+        >
+          <option value={10}>10</option>
+          <option value={50}>50</option>
+          <option value={75}>75</option>
+          <option value={100}>100</option>
+        </TextField>
+
         <Button disabled={page === 1} onClick={() => setPage(page - 1)}>
           Prev
         </Button>
 
-        <Typography>Page {page}</Typography>
+        <Typography>Page {page} of {totalPages}</Typography>
 
         <Button
           disabled={page * limit >= total}

@@ -29,10 +29,12 @@ export default function ProductList({
   page,
   setPage,
   limit,
+  setLimit,
   total,
 }) {
   const allSelected =
     products.length > 0 && products.every((p) => selected.includes(p._id));
+  const totalPages = Math.max(1, Math.ceil(total / limit));
 
   return (
     <Paper sx={{ p: 2 }}>
@@ -211,8 +213,27 @@ export default function ProductList({
         direction="row"
         spacing={2}
         justifyContent="flex-end"
+        alignItems="center"
         mt={2}
       >
+        <TextField
+          select
+          size="small"
+          label="Rows"
+          value={limit}
+          onChange={(e) => {
+            setPage(1);
+            setLimit?.(Number(e.target.value));
+          }}
+          SelectProps={{ native: true }}
+          sx={{ width: 100 }}
+        >
+          <option value={10}>10</option>
+          <option value={50}>50</option>
+          <option value={75}>75</option>
+          <option value={100}>100</option>
+        </TextField>
+
         <Button
           disabled={page === 1}
           onClick={() => setPage(page - 1)}
@@ -221,7 +242,7 @@ export default function ProductList({
         </Button>
 
         <Typography>
-          Page {page}
+          Page {page} of {totalPages}
         </Typography>
 
         <Button
