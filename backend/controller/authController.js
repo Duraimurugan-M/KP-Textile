@@ -1,5 +1,4 @@
 import { createAdminOnce, loginAdmin } from "../services/authservice.js";
-import { verifyTokenSafe } from "../utils/tokenutils.js";
 
 export const createAdmin = async (req, res) => {
   try {
@@ -41,12 +40,11 @@ export const logout = (req, res) => {
 };
 
 export const me = (req, res) => {
-  const token = req.cookies.token;
-  const data = verifyTokenSafe(token);
-
-  if (!data) {
-    return res.status(401).json({ success: false });
-  }
-
-  res.json({ success: true, user: data });
+  res.json({
+    success: true,
+    user: {
+      userId: req.user?.userId,
+      role: req.user?.role || "admin",
+    },
+  });
 };

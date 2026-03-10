@@ -88,7 +88,7 @@
 // }
 
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Box,
   Button,
@@ -110,6 +110,27 @@ const [form, setForm] = useState({
   password: "",
 });
 const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    let mounted = true;
+
+    const checkSession = async () => {
+      try {
+        await customFetch.get("/auth/me");
+        if (mounted) {
+          navigate("/app", { replace: true });
+        }
+      } catch {
+        // Stay on login page when not authenticated.
+      }
+    };
+
+    checkSession();
+
+    return () => {
+      mounted = false;
+    };
+  }, [navigate]);
 
 
 

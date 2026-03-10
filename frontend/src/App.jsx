@@ -10,6 +10,7 @@ import {
 
 // Pages
 import LoginPage from "./Pages/login/LoginPage.jsx";
+import ProtectedRoute from "./Component/ProtectedRoute.jsx";
 
 
 import HomeLayout from "./Pages/HomeLayout.jsx"
@@ -42,7 +43,11 @@ const router = createBrowserRouter([
   // 🌐 Main Application (after login)
   {
     path: "/app",
-    element: <HomeLayout />,
+    element: (
+      <ProtectedRoute>
+        <HomeLayout />
+      </ProtectedRoute>
+    ),
     children: [
       {
         index: true,
