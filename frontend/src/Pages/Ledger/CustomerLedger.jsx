@@ -29,6 +29,7 @@ import {
   YAxis,
 } from "recharts";
 import customFetch from "../../utils/customFetch";
+import { toast } from "react-toastify";
 import {
   exportLedgerToExcel,
   exportLedgerToPdf,
@@ -118,6 +119,7 @@ export default function CustomerLedger() {
 
         setAllRows(ledger);
       } catch {
+        toast.error("Failed to load customer ledger");
         setAllRows([]);
       }
     };
@@ -193,9 +195,9 @@ export default function CustomerLedger() {
 
   return (
     <Box sx={{ width: "100%", p: { xs: 2, md: 3 } }}>
-      <Grid container spacing={3}>
+      <Grid container spacing={3} sx={{ width: "100%", m: 0 }} alignItems="stretch">
         {topCustomer && (
-          <Grid item xs={12}>
+          <Grid size={{ xs: 12 }}>
             <Paper sx={{ p: 3, bgcolor: "#e3f2fd" }}>
               <Typography variant="subtitle2">Top Customer</Typography>
               <Typography variant="h4" color="primary">
@@ -208,66 +210,70 @@ export default function CustomerLedger() {
           </Grid>
         )}
 
-        <Grid item xs={12} lg={8}>
-          <Paper sx={{ p: 3, height: 380 }}>
+        <Grid size={{ xs: 12, lg: 8 }}>
+          <Paper sx={{ p: 3, height: 380, display: "flex", flexDirection: "column" }}>
             <Typography variant="h6" mb={2}>
               Top 5 Customers by Sales
             </Typography>
 
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart
-                data={topFive}
-                margin={{
-                  top: 20,
-                  right: 20,
-                  left: 10,
-                  bottom: 60,
-                }}
-              >
-                <XAxis
-                  dataKey="name"
-                  interval={0}
-                  angle={-30}
-                  textAnchor="end"
-                  height={60}
-                  tick={{
-                    fontSize: isMobile ? 10 : 12,
+            <Box sx={{ flex: 1, minHeight: 0 }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart
+                  data={topFive}
+                  margin={{
+                    top: 20,
+                    right: 20,
+                    left: 10,
+                    bottom: 60,
                   }}
-                />
-                <YAxis />
-                <Tooltip />
-                <Bar dataKey="value" fill="#1976d2" radius={[6, 6, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
+                >
+                  <XAxis
+                    dataKey="name"
+                    interval={0}
+                    angle={-30}
+                    textAnchor="end"
+                    height={60}
+                    tick={{
+                      fontSize: isMobile ? 10 : 12,
+                    }}
+                  />
+                  <YAxis />
+                  <Tooltip />
+                  <Bar dataKey="value" fill="#1976d2" radius={[6, 6, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </Box>
           </Paper>
         </Grid>
 
-        <Grid item xs={12} lg={4}>
-          <Paper sx={{ p: 3, height: 380 }}>
+        <Grid size={{ xs: 12, lg: 4 }}>
+          <Paper sx={{ p: 3, height: 380, display: "flex", flexDirection: "column" }}>
             <Typography variant="h6" mb={2}>
               Customer Sales Distribution
             </Typography>
 
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={summary}
-                  dataKey="value"
-                  nameKey="name"
-                  outerRadius={isMobile ? 90 : 120}
-                  label={!isMobile}
-                >
-                  {summary.map((_, i) => (
-                    <Cell key={i} fill={COLORS[i % COLORS.length]} />
-                  ))}
-                </Pie>
-                <Tooltip />
-              </PieChart>
-            </ResponsiveContainer>
+            <Box sx={{ flex: 1, minHeight: 0 }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={summary}
+                    dataKey="value"
+                    nameKey="name"
+                    outerRadius={isMobile ? 90 : 120}
+                    label={!isMobile}
+                  >
+                    {summary.map((_, i) => (
+                      <Cell key={i} fill={COLORS[i % COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip />
+                </PieChart>
+              </ResponsiveContainer>
+            </Box>
           </Paper>
         </Grid>
 
-        <Grid item xs={12}>
+        <Grid size={{ xs: 12 }}>
           <Paper sx={{ p: 3 }}>
             <Stack
               direction={{ xs: "column", md: "row" }}

@@ -39,7 +39,7 @@ export default function ProductList({
   return (
     <Paper sx={{ p: 2 }}>
       <Stack
-        direction="row"
+        direction={{ xs: "column", sm: "row" }}
         spacing={2}
         justifyContent="space-between"
         mb={2}
@@ -48,7 +48,7 @@ export default function ProductList({
           Product List
         </Typography>
 
-        <Stack direction="row" spacing={2}>
+        <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
           <TextField
             size="small"
             placeholder="Search"
@@ -154,7 +154,7 @@ export default function ProductList({
                   <TableCell>{p.category}</TableCell>
                   <TableCell>{p.fabric}</TableCell>
                   <TableCell>{p.color}</TableCell>
-                  <TableCell>₹{p.price}</TableCell>
+                  <TableCell>Rs {p.price}</TableCell>
                   <TableCell>{p.stock}</TableCell>
                   <TableCell>{p.productCode}</TableCell>
                   <TableCell>{p.hsnCode}</TableCell>
@@ -210,7 +210,7 @@ export default function ProductList({
       </TableContainer>
 
       <Stack
-        direction="row"
+        direction={{ xs: "column", sm: "row" }}
         spacing={2}
         justifyContent="flex-end"
         alignItems="center"

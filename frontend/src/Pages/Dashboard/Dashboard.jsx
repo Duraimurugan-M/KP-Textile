@@ -25,6 +25,7 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import customFetch from "../../utils/customFetch";
+import { toast } from "react-toastify";
 
 const CUSTOMER_COLORS = ["#1976d2", "#2e7d32", "#f57c00", "#6a1b9a", "#d32f2f"];
 const SUPPLIER_COLORS = ["#00897b", "#5e35b1", "#ef6c00", "#c62828", "#3949ab"];
@@ -101,6 +102,7 @@ export default function DashboardLedger() {
         setMonthlyPurchase(Object.keys(purMonth).map((m) => ({ month: m, amount: purMonth[m] })));
         setVendorPurchase(Object.keys(vendorMap).map((v) => ({ name: v, value: vendorMap[v] })));
       } catch {
+        toast.error("Failed to load dashboard data");
         setSales([]);
         setPurchases([]);
         setCustomersCount(0);
@@ -134,15 +136,15 @@ export default function DashboardLedger() {
       </Typography>
 
       {/* KPI CARDS */}
-      <Grid container spacing={3} mb={3}>
+      <Grid container spacing={3} sx={{ mb: 3, width: "100%", m: 0 }}>
         {[
           { label: "Total Sales", value: totalSales, color: "#1976d2" },
           { label: "Total Purchase", value: totalPurchase, color: "#d32f2f" },
           { label: "Customers", value: customersCount, color: "#2e7d32" },
           { label: "Suppliers", value: vendorsCount, color: "#f57c00" },
         ].map((c, i) => (
-          <Grid item xs={12} sm={6} md={3} key={i} sx={{ width: 250 }}>
-            <Paper sx={{ p: 3 }}>
+          <Grid key={i} size={{ xs: 12, sm: 6, lg: 3 }}>
+            <Paper sx={{ p: 3, height: "100%" }}>
               <Typography variant="body2">{c.label}</Typography>
               <Typography variant="h5" fontWeight="bold" sx={{ color: c.color }}>
                 {c.label === "Customers" || c.label === "Suppliers"
@@ -155,42 +157,47 @@ export default function DashboardLedger() {
       </Grid>
 
       {/* MONTHLY CHARTS */}
-      <Grid container spacing={3} mb={3}>
-        <Grid item xs={12} md={6} sx={{ width: 500 }}>
-          <Paper sx={{ p: 3, height: 360 }}>
+      <Grid container spacing={3} sx={{ mb: 3, width: "100%", m: 0 }} alignItems="stretch">
+        <Grid size={{ xs: 12, lg: 6 }}>
+          <Paper sx={{ p: 3, height: 360, display: "flex", flexDirection: "column" }}>
             <Typography variant="h6">Monthly Sales</Typography>
-            <ResponsiveContainer width="100%" height="100%">
+            <Box sx={{ flex: 1, minHeight: 0 }}>
+              <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={monthlySales}>
                 <XAxis dataKey="month" />
                 <YAxis />
                 <Tooltip />
                 <Area dataKey="amount" stroke="#1976d2" fill="#bbdefb" />
               </AreaChart>
-            </ResponsiveContainer>
+              </ResponsiveContainer>
+            </Box>
           </Paper>
         </Grid>
 
-        <Grid item xs={12} md={6} sx={{ width: 500 }}>
-          <Paper sx={{ p: 3, height: 360 }}>
+        <Grid size={{ xs: 12, lg: 6 }}>
+          <Paper sx={{ p: 3, height: 360, display: "flex", flexDirection: "column" }}>
             <Typography variant="h6">Monthly Purchase</Typography>
-            <ResponsiveContainer width="100%" height="100%">
+            <Box sx={{ flex: 1, minHeight: 0 }}>
+              <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={monthlyPurchase}>
                 <XAxis dataKey="month" />
                 <YAxis />
                 <Tooltip />
                 <Area dataKey="amount" stroke="#d32f2f" fill="#ffcdd2" />
               </AreaChart>
-            </ResponsiveContainer>
+              </ResponsiveContainer>
+            </Box>
           </Paper>
         </Grid>
       </Grid>
 
       {/* PIE CHARTS */}
-      <Grid container spacing={3} mb={3}>
-        <Grid item xs={12} md={6} sx={{ width: 500 }}>
-          <Paper sx={{ p: 3, height: 360 }}>
+      <Grid container spacing={3} sx={{ mb: 3, width: "100%", m: 0 }} alignItems="stretch">
+        <Grid size={{ xs: 12, lg: 6 }}>
+          <Paper sx={{ p: 3, height: 360, display: "flex", flexDirection: "column" }}>
             <Typography variant="h6">Customer-wise Sales</Typography>
-            <ResponsiveContainer width="100%" height="100%">
+            <Box sx={{ flex: 1, minHeight: 0 }}>
+              <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
                   data={customerSales}
@@ -205,14 +212,16 @@ export default function DashboardLedger() {
                 </Pie>
                 <Tooltip />
               </PieChart>
-            </ResponsiveContainer>
+              </ResponsiveContainer>
+            </Box>
           </Paper>
         </Grid>
 
-        <Grid item xs={12} md={6} sx={{ width: 500 }}>
-          <Paper sx={{ p: 3, height: 360 }}>
+        <Grid size={{ xs: 12, lg: 6 }}>
+          <Paper sx={{ p: 3, height: 360, display: "flex", flexDirection: "column" }}>
             <Typography variant="h6">Supplier-wise Purchase</Typography>
-            <ResponsiveContainer width="100%" height="100%">
+            <Box sx={{ flex: 1, minHeight: 0 }}>
+              <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
                   data={vendorPurchase}
@@ -227,15 +236,16 @@ export default function DashboardLedger() {
                 </Pie>
                 <Tooltip />
               </PieChart>
-            </ResponsiveContainer>
+              </ResponsiveContainer>
+            </Box>
           </Paper>
         </Grid>
       </Grid>
 
       {/* TABLES */}
-      <Grid container spacing={3}>
-        <Grid item xs={12} md={6} sx={{ width: 500 }}>
-          <Paper sx={{ p: 3 }}>
+      <Grid container spacing={3} sx={{ width: "100%", m: 0 }} alignItems="stretch">
+        <Grid size={{ xs: 12, lg: 6 }}>
+          <Paper sx={{ p: 3, height: "100%" }}>
             <Typography variant="h6" mb={2}>
               Sales Ledger
             </Typography>
@@ -265,8 +275,8 @@ export default function DashboardLedger() {
           </Paper>
         </Grid>
 
-        <Grid item xs={12} md={6} sx={{ width: 500 }}>
-          <Paper sx={{ p: 3 }}>
+        <Grid size={{ xs: 12, lg: 6 }}>
+          <Paper sx={{ p: 3, height: "100%" }}>
             <Typography variant="h6" mb={2}>
               Purchase Ledger
             </Typography>

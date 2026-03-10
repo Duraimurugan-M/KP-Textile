@@ -248,7 +248,7 @@ export default function ProductPage() {
           <div class="code">${p.productCode}</div>
           <div class="bottom">
             <span class="name">${p.name}</span>
-            <span class="price">₹${p.price}</span>
+            <span class="price">Rs ${p.price}</span>
           </div>
         </div>`;
       }

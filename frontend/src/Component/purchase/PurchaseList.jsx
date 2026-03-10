@@ -62,14 +62,14 @@ export default function PurchaseList({
   return (
     <Paper sx={{ p: 3 }}>
       <Stack
-        direction="row"
+        direction={{ xs: "column", sm: "row" }}
         spacing={2}
         justifyContent="space-between"
         mb={2}
       >
         <Typography variant="h6">Purchase History</Typography>
 
-        <Stack direction="row" spacing={2}>
+        <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
           <TextField
             size="small"
             placeholder="Search"
@@ -205,7 +205,7 @@ export default function PurchaseList({
       </TableContainer>
 
       <Stack
-        direction="row"
+        direction={{ xs: "column", sm: "row" }}
         spacing={2}
         justifyContent="flex-end"
         alignItems="center"

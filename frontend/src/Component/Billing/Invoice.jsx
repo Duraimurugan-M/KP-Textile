@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import customFetch from "../../utils/customFetch";
+import { toast } from "react-toastify";
 
 const SHOP = {
   code: "YS",
@@ -117,6 +118,7 @@ export default function Invoice() {
         setAllCustomers(customersRes.data?.customers || []);
         setAllProducts(productsRes.data?.products || []);
       } catch {
+        if (!ignore) toast.error("Failed to load invoice data");
         if (!ignore) {
           setAllSales([]);
           setAllCustomers([]);

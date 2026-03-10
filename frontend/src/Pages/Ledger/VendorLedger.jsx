@@ -28,6 +28,7 @@ import {
   YAxis,
 } from "recharts";
 import customFetch from "../../utils/customFetch";
+import { toast } from "react-toastify";
 import {
   exportLedgerToExcel,
   exportLedgerToPdf,
@@ -105,6 +106,7 @@ export default function VendorLedger() {
 
         setAllRows(rows);
       } catch {
+        toast.error("Failed to load supplier ledger");
         setAllRows([]);
       }
     };
@@ -185,9 +187,9 @@ export default function VendorLedger() {
 
   return (
     <Box sx={{ width: "100%", p: { xs: 2, md: 3 } }}>
-      <Grid container spacing={3}>
+      <Grid container spacing={3} sx={{ width: "100%", m: 0 }} alignItems="stretch">
         {topVendor && (
-          <Grid item xs={12}>
+          <Grid size={{ xs: 12 }}>
             <Paper sx={{ p: 3, bgcolor: "#fff3e0" }}>
               <Typography variant="subtitle2">Top Supplier</Typography>
               <Typography variant="h4" color="warning.main">
@@ -200,56 +202,60 @@ export default function VendorLedger() {
           </Grid>
         )}
 
-        <Grid item xs={12} lg={6}>
-          <Paper sx={{ p: 3, height: 380 }}>
+        <Grid size={{ xs: 12, lg: 6 }}>
+          <Paper sx={{ p: 3, height: 380, display: "flex", flexDirection: "column" }}>
             <Typography variant="h6" mb={2}>
               Top 5 Suppliers by Purchase
             </Typography>
 
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={topFive} margin={{ top: 20, bottom: 60 }}>
-                <XAxis
-                  dataKey="name"
-                  angle={-30}
-                  textAnchor="end"
-                  interval={0}
-                  height={60}
-                  tick={{ fontSize: isMobile ? 10 : 12 }}
-                />
-                <YAxis />
-                <Tooltip />
-                <Bar dataKey="value" fill="#f57c00" radius={[6, 6, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
+            <Box sx={{ flex: 1, minHeight: 0 }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={topFive} margin={{ top: 20, bottom: 60 }}>
+                  <XAxis
+                    dataKey="name"
+                    angle={-30}
+                    textAnchor="end"
+                    interval={0}
+                    height={60}
+                    tick={{ fontSize: isMobile ? 10 : 12 }}
+                  />
+                  <YAxis />
+                  <Tooltip />
+                  <Bar dataKey="value" fill="#f57c00" radius={[6, 6, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </Box>
           </Paper>
         </Grid>
 
-        <Grid item xs={12} lg={6}>
-          <Paper sx={{ p: 3, height: 380 }}>
+        <Grid size={{ xs: 12, lg: 6 }}>
+          <Paper sx={{ p: 3, height: 380, display: "flex", flexDirection: "column" }}>
             <Typography variant="h6" mb={2}>
               Purchase Trend (Date-wise)
             </Typography>
 
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={trendData} margin={{ top: 20, right: 20, left: 10, bottom: 60 }}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis
-                  dataKey="date"
-                  angle={-30}
-                  textAnchor="end"
-                  interval={0}
-                  height={60}
-                  tick={{ fontSize: isMobile ? 10 : 12 }}
-                />
-                <YAxis />
-                <Tooltip />
-                <Line type="monotone" dataKey="amount" stroke="#6a1b9a" strokeWidth={3} />
-              </LineChart>
-            </ResponsiveContainer>
+            <Box sx={{ flex: 1, minHeight: 0 }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={trendData} margin={{ top: 20, right: 20, left: 10, bottom: 60 }}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis
+                    dataKey="date"
+                    angle={-30}
+                    textAnchor="end"
+                    interval={0}
+                    height={60}
+                    tick={{ fontSize: isMobile ? 10 : 12 }}
+                  />
+                  <YAxis />
+                  <Tooltip />
+                  <Line type="monotone" dataKey="amount" stroke="#6a1b9a" strokeWidth={3} />
+                </LineChart>
+              </ResponsiveContainer>
+            </Box>
           </Paper>
         </Grid>
 
-        <Grid item xs={12}>
+        <Grid size={{ xs: 12 }}>
           <Paper sx={{ p: 3 }}>
             <Stack
               direction={{ xs: "column", md: "row" }}

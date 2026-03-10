@@ -156,7 +156,7 @@ export const updateProduct = async (req, res) => {
       id,
       req.body,
       {
-        new: true,
+        returnDocument: "after",
         runValidators: true,
       }
     );

@@ -62,7 +62,7 @@ export default function SalesList({
   return (
     <Paper sx={{ p: 3 }}>
       <Stack
-        direction="row"
+        direction={{ xs: "column", sm: "row" }}
         spacing={2}
         justifyContent="space-between"
         mb={2}
@@ -71,7 +71,7 @@ export default function SalesList({
           Sales History
         </Typography>
 
-        <Stack direction="row" spacing={2}>
+        <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
           <TextField
             size="small"
             placeholder="Search"
@@ -178,12 +178,10 @@ export default function SalesList({
                   </Button>
                 </TableCell>
 
-                <TableCell>
-                  ₹{sale.grossTotal}
-                </TableCell>
+                <TableCell>Rs {sale.grossTotal}</TableCell>
 
                 <TableCell>
-                  <b>₹{sale.grandTotal}</b>
+                  <b>Rs {sale.grandTotal}</b>
                 </TableCell>
               </TableRow>
             ))}
@@ -192,7 +190,7 @@ export default function SalesList({
       </TableContainer>
 
       <Stack
-        direction="row"
+        direction={{ xs: "column", sm: "row" }}
         spacing={2}
         justifyContent="flex-end"
         alignItems="center"

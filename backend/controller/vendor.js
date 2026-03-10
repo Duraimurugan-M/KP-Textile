@@ -94,7 +94,7 @@ export const updateVendor = async (req, res) => {
       req.params.id,
       data,
       {
-        new: true,
+        returnDocument: "after",
         runValidators: true,
       }
     );
