@@ -58,6 +58,18 @@ export default function VendorLedger() {
 
         const mapped = purchases
           .map((purchase) => {
+            const purchaseItemsList = (purchase.items || [])
+              .map((item) => {
+                const nameFromProduct =
+                  typeof item.product === "object" ? item.product?.name : "";
+                const codeFromProduct =
+                  typeof item.product === "object" ? item.product?.productCode : "";
+                const fallbackName = item.productName || item.name || item.productCode || "";
+
+                return (nameFromProduct || codeFromProduct || fallbackName || "").trim();
+              })
+              .filter(Boolean);
+
             const total = (purchase.items || []).reduce(
               (sum, item) => sum + Number(item.qty || 0) * Number(item.price || 0),
               0
@@ -68,7 +80,7 @@ export default function VendorLedger() {
               dateRaw: purchase.createdAt,
               date: formatDateTime(purchase.createdAt),
               vendor: purchase.supplier?.name || "Unknown",
-              particular: `Purchase #${purchase._id?.slice(-6) || ""}`,
+              purchaseItems: purchaseItemsList.join(", ") || `${purchase.items?.length || 0} item(s)`,
               debit: total,
             };
           })
@@ -104,7 +116,7 @@ export default function VendorLedger() {
         search,
         fromDate,
         toDate,
-        searchFields: ["vendor", "particular"],
+        searchFields: ["vendor", "purchaseItems"],
         exactFilters: { vendor: selectedVendor },
       }),
     [allRows, search, fromDate, toDate, selectedVendor]
@@ -151,7 +163,7 @@ export default function VendorLedger() {
   const exportColumns = [
     { label: "Date", key: "date" },
     { label: "Vendor", key: "vendor" },
-    { label: "Particular", key: "particular" },
+    { label: "Purchase Items", key: "purchaseItems" },
     { label: "Debit", value: (row) => row.debit.toFixed(2) },
     { label: "Balance", value: (row) => row.balance.toFixed(2) },
   ];
@@ -238,6 +250,7 @@ export default function VendorLedger() {
                     exportLedgerToExcel({
                       rows: sortedRows,
                       columns: exportColumns,
+                      title: "Vendor Ledger",
                       fileName: "vendor-ledger",
                     })
                   }
@@ -263,7 +276,7 @@ export default function VendorLedger() {
             <Stack direction={{ xs: "column", md: "row" }} spacing={2} mb={2}>
               <TextField
                 size="small"
-                placeholder="Search vendor or particular"
+                placeholder="Search vendor or items"
                 value={search}
                 onChange={(e) => {
                   setPage(1);
@@ -298,6 +311,8 @@ export default function VendorLedger() {
                   setSelectedVendor(e.target.value);
                 }}
                 SelectProps={{ native: true }}
+                InputLabelProps={{ shrink: true }}
+                sx={{ width: { xs: "100%", sm: 170 }, maxWidth: "100%" }}
               >
                 <option value="">All</option>
                 {vendorOptions.map((vendor) => (
@@ -340,7 +355,7 @@ export default function VendorLedger() {
                   <TableRow>
                     <TableCell>Date</TableCell>
                     <TableCell>Vendor</TableCell>
-                    <TableCell>Particular</TableCell>
+                    <TableCell>Purchase Items</TableCell>
                     <TableCell align="right">Debit (Rs)</TableCell>
                     <TableCell align="right">Balance (Rs)</TableCell>
                   </TableRow>
@@ -359,7 +374,7 @@ export default function VendorLedger() {
                     <TableRow key={row.id}>
                       <TableCell>{row.date}</TableCell>
                       <TableCell>{row.vendor}</TableCell>
-                      <TableCell>{row.particular}</TableCell>
+                      <TableCell>{row.purchaseItems}</TableCell>
                       <TableCell align="right">Rs {row.debit.toFixed(2)}</TableCell>
                       <TableCell align="right">Rs {row.balance.toFixed(2)}</TableCell>
                     </TableRow>

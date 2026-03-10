@@ -230,6 +230,7 @@ export default function CustomerLedger() {
                     exportLedgerToExcel({
                       rows: sortedRows,
                       columns: exportColumns,
+                      title: "Customer Ledger",
                       fileName: "customer-ledger",
                     })
                   }
@@ -290,6 +291,8 @@ export default function CustomerLedger() {
                   setSelectedCustomer(e.target.value);
                 }}
                 SelectProps={{ native: true }}
+                InputLabelProps={{ shrink: true }}
+                sx={{ width: { xs: "100%", sm: 170 }, maxWidth: "100%" }}
               >
                 <option value="">All</option>
                 {customerOptions.map((customer) => (

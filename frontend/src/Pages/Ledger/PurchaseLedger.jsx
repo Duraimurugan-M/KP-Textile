@@ -245,6 +245,7 @@ export default function PurchaseLedger() {
                     exportLedgerToExcel({
                       rows: sortedRows,
                       columns: exportColumns,
+                      title: "Purchase Ledger",
                       fileName: "purchase-ledger",
                     })
                   }
@@ -307,6 +308,8 @@ export default function PurchaseLedger() {
                   setSelectedVendor(e.target.value);
                 }}
                 SelectProps={{ native: true }}
+                InputLabelProps={{ shrink: true }}
+                sx={{ width: { xs: "100%", sm: 170 }, maxWidth: "100%" }}
               >
                 <option value="">All</option>
                 {vendorOptions.map((vendor) => (

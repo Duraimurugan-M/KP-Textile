@@ -39,7 +39,6 @@ import {
 } from "./ledgerHelpers";
 
 const COLORS = ["#1976d2", "#2e7d32", "#f57c00", "#6a1b9a", "#c2185b"];
-const clampWidthCh = (len, min = 10, max = 32) => `${Math.min(Math.max(len, min), max)}ch`;
 
 export default function SalesLedger() {
   const [allRows, setAllRows] = useState([]);
@@ -89,11 +88,6 @@ export default function SalesLedger() {
         .sort((a, b) => a.localeCompare(b)),
     [allRows]
   );
-  const customerFieldWidth = useMemo(() => {
-    const maxLen = customerOptions.reduce((acc, name) => Math.max(acc, name.length), 3);
-    return clampWidthCh(maxLen + 4);
-  }, [customerOptions]);
-
   const filteredRows = useMemo(
     () =>
       filterLedgerRows({
@@ -246,6 +240,7 @@ export default function SalesLedger() {
                     exportLedgerToExcel({
                       rows: sortedRows,
                       columns: exportColumns,
+                      title: "Sales Ledger",
                       fileName: "sales-ledger",
                     })
                   }
@@ -308,8 +303,9 @@ export default function SalesLedger() {
                   setSelectedCustomer(e.target.value);
                 }}
                 SelectProps={{ native: true }}
+                InputLabelProps={{ shrink: true }}
                 sx={{
-                  width: { xs: "100%", md: customerFieldWidth },
+                  width: { xs: "100%", sm: 170 },
                   maxWidth: "100%",
                 }}
               >
