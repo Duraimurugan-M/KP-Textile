@@ -167,7 +167,7 @@ export default function PurchasePage() {
 
   const handleAddSupplier = async () => {
     if (!vendorForm.name || !vendorForm.mobile) {
-      toast.error("Vendor name and mobile are required");
+      toast.error("Supplier name and mobile are required");
       return;
     }
 
@@ -329,7 +329,7 @@ export default function PurchasePage() {
             <Grid item xs={12} md={6}>
               <TextField
                 fullWidth
-                label="Vendor Name"
+                label="Supplier Name"
                 name="name"
                 value={vendorForm.name}
                 onChange={handleVendorChange}
@@ -408,7 +408,7 @@ export default function PurchasePage() {
             <Grid item xs={12}>
               <Stack direction="row" spacing={2} justifyContent="flex-end">
                 <Button variant="contained" onClick={handleAddSupplier}>
-                  Add Vendor
+                  Add Supplier
                 </Button>
 
                 <Button

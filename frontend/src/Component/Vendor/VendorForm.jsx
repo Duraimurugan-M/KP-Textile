@@ -70,15 +70,15 @@ export default function VendorForm({
   return (
     <Paper sx={{ p: 3 }}>
       <Typography variant="h6" mb={2}>
-        {isEdit ? "Edit Vendor" : "Add Vendor"}
+        {isEdit ? "Edit Supplier" : "Add Supplier"}
       </Typography>
 
       <Grid container spacing={2}>
-        {/* Vendor Name */}
+        {/* Supplier Name */}
         <Grid item xs={12} md={6}>
           <TextField
             fullWidth
-            label="Vendor Name"
+            label="Supplier Name"
             name="name"
             value={form.name}
             onChange={onChange}
@@ -165,7 +165,7 @@ export default function VendorForm({
         <Grid item xs={12} textAlign="right">
           <Stack direction="row" spacing={2} justifyContent="flex-end">
             <Button variant="contained" onClick={onSubmit}>
-              {isEdit ? "Update Vendor" : "Add Vendor"}
+              {isEdit ? "Update Supplier" : "Add Supplier"}
             </Button>
 
             {isEdit && (

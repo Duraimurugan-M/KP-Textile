@@ -35,7 +35,7 @@ export default function VendorList({
         mb={2}
       >
         <Typography variant="h6">
-          Vendor List
+          Supplier List
         </Typography>
 
         <Stack direction="row" spacing={2}>
@@ -83,7 +83,7 @@ export default function VendorList({
             {vendors.length === 0 && (
               <TableRow>
                 <TableCell colSpan={7} align="center">
-                  No vendors found
+                  No suppliers found
                 </TableCell>
               </TableRow>
             )}

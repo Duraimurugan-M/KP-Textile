@@ -247,7 +247,7 @@ import { toast } from "react-toastify";
 
 const menuItems = [
   { label: "Dashboard", path: "/app", icon: FaTachometerAlt, exact: true },
-  { label: "Vendor", path: "/app/vendors", icon: FaTruck },
+  { label: "Supplier", path: "/app/vendors", icon: FaTruck },
   { label: "Customer", path: "/app/customers", icon: FaUsers },
   { label: "Product", path: "/app/products", icon: FaBoxOpen },
   { label: "Purchase", path: "/app/purchases", icon: FaShoppingBag },
@@ -260,7 +260,7 @@ const menuItems = [
       { label: "Sales Report", path: "/app/salesledger" },
       { label: "Purchase Report", path: "/app/purchaseledger" },
       { label: "Customer Ledger", path: "/app/customerledger" },
-      { label: "Vendor Ledger", path: "/app/vendorledger" },
+      { label: "Supplier Ledger", path: "/app/vendorledger" },
     ],
   },
 ];

@@ -92,7 +92,7 @@ export default function DashboardLedger() {
           { label: "Total Sales", value: totalSales, color: "#1976d2" },
           { label: "Total Purchase", value: totalPurchase, color: "#d32f2f" },
           { label: "Customers", value: customerSales.length, color: "#2e7d32" },
-          { label: "Vendors", value: vendorPurchase.length, color: "#f57c00" },
+          { label: "Suppliers", value: vendorPurchase.length, color: "#f57c00" },
         ].map((c, i) => (
           <Grid item xs={12} sm={6} md={3} key={i} sx={{width:250}}>
             <Paper sx={{ p: 3 }}>
@@ -162,7 +162,7 @@ export default function DashboardLedger() {
 
         <Grid item xs={12} md={6}sx={{width:500}}>
           <Paper sx={{ p: 3, height: 360 }}>
-            <Typography variant="h6">Vendor-wise Purchase</Typography>
+            <Typography variant="h6">Supplier-wise Purchase</Typography>
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
@@ -219,7 +219,7 @@ export default function DashboardLedger() {
                 <TableHead>
                   <TableRow>
                     <TableCell>Date</TableCell>
-                    <TableCell>Vendor</TableCell>
+                    <TableCell>Supplier</TableCell>
                     <TableCell align="right">Total (₹)</TableCell>
                   </TableRow>
                 </TableHead>

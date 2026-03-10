@@ -162,7 +162,7 @@ export default function VendorLedger() {
 
   const exportColumns = [
     { label: "Date", key: "date" },
-    { label: "Vendor", key: "vendor" },
+    { label: "Supplier", key: "vendor" },
     { label: "Purchase Items", key: "purchaseItems" },
     { label: "Debit", value: (row) => row.debit.toFixed(2) },
     { label: "Balance", value: (row) => row.balance.toFixed(2) },
@@ -174,7 +174,7 @@ export default function VendorLedger() {
         {topVendor && (
           <Grid item xs={12}>
             <Paper sx={{ p: 3, bgcolor: "#fff3e0" }}>
-              <Typography variant="subtitle2">Top Vendor</Typography>
+              <Typography variant="subtitle2">Top Supplier</Typography>
               <Typography variant="h4" color="warning.main">
                 {topVendor.name}
               </Typography>
@@ -188,7 +188,7 @@ export default function VendorLedger() {
         <Grid item xs={12} lg={6}>
           <Paper sx={{ p: 3, height: 380 }}>
             <Typography variant="h6" mb={2}>
-              Top 5 Vendors by Purchase
+              Top 5 Suppliers by Purchase
             </Typography>
 
             <ResponsiveContainer width="100%" height="100%">
@@ -242,7 +242,7 @@ export default function VendorLedger() {
               justifyContent="space-between"
               mb={2}
             >
-              <Typography variant="h6">Vendor Purchase Ledger</Typography>
+              <Typography variant="h6">Supplier Purchase Ledger</Typography>
               <Stack direction={{ xs: "column", sm: "row" }} spacing={1}>
                 <Button
                   variant="outlined"
@@ -250,7 +250,7 @@ export default function VendorLedger() {
                     exportLedgerToExcel({
                       rows: sortedRows,
                       columns: exportColumns,
-                      title: "Vendor Ledger",
+                      title: "Supplier Ledger",
                       fileName: "vendor-ledger",
                     })
                   }
@@ -263,7 +263,7 @@ export default function VendorLedger() {
                     exportLedgerToPdf({
                       rows: sortedRows,
                       columns: exportColumns,
-                      title: "Vendor Ledger",
+                      title: "Supplier Ledger",
                       fileName: "vendor-ledger",
                     })
                   }
@@ -276,7 +276,7 @@ export default function VendorLedger() {
             <Stack direction={{ xs: "column", md: "row" }} spacing={2} mb={2}>
               <TextField
                 size="small"
-                placeholder="Search vendor or items"
+                placeholder="Search supplier or items"
                 value={search}
                 onChange={(e) => {
                   setPage(1);
@@ -296,15 +296,15 @@ export default function VendorLedger() {
               >
                 <option value="-dateRaw">Newest</option>
                 <option value="dateRaw">Oldest</option>
-                <option value="vendor">Vendor A-Z</option>
-                <option value="-vendor">Vendor Z-A</option>
+                <option value="vendor">Supplier A-Z</option>
+                <option value="-vendor">Supplier Z-A</option>
                 <option value="-debit">Debit High-Low</option>
                 <option value="debit">Debit Low-High</option>
               </TextField>
               <TextField
                 select
                 size="small"
-                label="Vendor"
+                label="Supplier"
                 value={selectedVendor}
                 onChange={(e) => {
                   setPage(1);
@@ -350,14 +350,24 @@ export default function VendorLedger() {
             </Typography>
 
             <TableContainer sx={{ overflowX: "auto" }}>
-              <Table size="small" sx={{ minWidth: isMobile ? 700 : 1200 }}>
+              <Table
+                size="small"
+                sx={{
+                  minWidth: isMobile ? 700 : "100%",
+                  tableLayout: "fixed",
+                }}
+              >
                 <TableHead>
                   <TableRow>
-                    <TableCell>Date</TableCell>
-                    <TableCell>Vendor</TableCell>
-                    <TableCell>Purchase Items</TableCell>
-                    <TableCell align="right">Debit (Rs)</TableCell>
-                    <TableCell align="right">Balance (Rs)</TableCell>
+                    <TableCell sx={{ width: "20%" }}>Date</TableCell>
+                    <TableCell sx={{ width: "20%" }}>Supplier</TableCell>
+                    <TableCell sx={{ width: "30%" }}>Purchase Items</TableCell>
+                    <TableCell align="right" sx={{ width: "15%" }}>
+                      Debit (Rs)
+                    </TableCell>
+                    <TableCell align="right" sx={{ width: "15%" }}>
+                      Balance (Rs)
+                    </TableCell>
                   </TableRow>
                 </TableHead>
 

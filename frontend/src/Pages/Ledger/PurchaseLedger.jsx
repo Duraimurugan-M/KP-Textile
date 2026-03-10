@@ -146,7 +146,7 @@ export default function PurchaseLedger() {
 
   const exportColumns = [
     { label: "Date", key: "date" },
-    { label: "Vendor", key: "vendor" },
+    { label: "Supplier", key: "vendor" },
     { label: "Items", key: "items" },
     { label: "Total Qty", key: "qty" },
     { label: "Total Amount", value: (row) => row.total.toFixed(2) },
@@ -168,7 +168,7 @@ export default function PurchaseLedger() {
             color="text.secondary"
             sx={{ textAlign: { xs: "center", md: "left" } }}
           >
-            Monthly purchase trends, vendor-wise distribution, and detailed purchase history
+            Monthly purchase trends, supplier-wise distribution, and detailed purchase history
           </Typography>
         </Grid>
       </Grid>
@@ -204,7 +204,7 @@ export default function PurchaseLedger() {
         <Grid item xs={12} lg={6} width={500}>
           <Paper sx={{ p: 3, height: 360 }}>
             <Typography variant="h6" mb={2}>
-              Vendor-wise Purchase
+              Supplier-wise Purchase
             </Typography>
 
             <ResponsiveContainer width="100%" height="100%">
@@ -271,7 +271,7 @@ export default function PurchaseLedger() {
             <Stack direction={{ xs: "column", md: "row" }} spacing={2} mb={2}>
               <TextField
                 size="small"
-                placeholder="Search vendor"
+                placeholder="Search supplier"
                 value={search}
                 onChange={(e) => {
                   setPage(1);
@@ -291,8 +291,8 @@ export default function PurchaseLedger() {
               >
                 <option value="-dateRaw">Newest</option>
                 <option value="dateRaw">Oldest</option>
-                <option value="vendor">Vendor A-Z</option>
-                <option value="-vendor">Vendor Z-A</option>
+                <option value="vendor">Supplier A-Z</option>
+                <option value="-vendor">Supplier Z-A</option>
                 <option value="-total">Amount High-Low</option>
                 <option value="total">Amount Low-High</option>
                 <option value="-qty">Qty High-Low</option>
@@ -301,7 +301,7 @@ export default function PurchaseLedger() {
               <TextField
                 select
                 size="small"
-                label="Vendor"
+                label="Supplier"
                 value={selectedVendor}
                 onChange={(e) => {
                   setPage(1);
@@ -351,7 +351,7 @@ export default function PurchaseLedger() {
                 <TableHead>
                   <TableRow>
                     <TableCell>Date</TableCell>
-                    <TableCell>Vendor</TableCell>
+                    <TableCell>Supplier</TableCell>
                     <TableCell align="center">Items</TableCell>
                     <TableCell align="center">Total Qty</TableCell>
                     <TableCell align="right">Total Amount (Rs)</TableCell>

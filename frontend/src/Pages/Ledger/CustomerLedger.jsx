@@ -330,14 +330,24 @@ export default function CustomerLedger() {
             </Typography>
 
             <TableContainer sx={{ overflowX: "auto" }}>
-              <Table size="small" sx={{ minWidth: isMobile ? 700 : 1200 }}>
+              <Table
+                size="small"
+                sx={{
+                  minWidth: isMobile ? 700 : "100%",
+                  tableLayout: "fixed",
+                }}
+              >
                 <TableHead>
                   <TableRow>
-                    <TableCell>Date</TableCell>
-                    <TableCell>Customer</TableCell>
-                    <TableCell>Particular</TableCell>
-                    <TableCell align="right">Debit (Rs)</TableCell>
-                    <TableCell align="right">Balance (Rs)</TableCell>
+                    <TableCell sx={{ width: "20%" }}>Date</TableCell>
+                    <TableCell sx={{ width: "20%" }}>Customer</TableCell>
+                    <TableCell sx={{ width: "30%" }}>Particular</TableCell>
+                    <TableCell align="right" sx={{ width: "15%" }}>
+                      Debit (Rs)
+                    </TableCell>
+                    <TableCell align="right" sx={{ width: "15%" }}>
+                      Balance (Rs)
+                    </TableCell>
                   </TableRow>
                 </TableHead>
 

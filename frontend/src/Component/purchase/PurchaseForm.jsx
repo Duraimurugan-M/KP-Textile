@@ -181,7 +181,7 @@ export default function PurchaseForm({
                 }}
                 isOptionEqualToValue={(option, value) => option._id === value._id}
                 renderInput={(params) => (
-                  <TextField {...params} label="Vendor" fullWidth />
+                  <TextField {...params} label="Supplier" fullWidth />
                 )}
                 renderOption={(props, option) => (
                   <li

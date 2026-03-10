@@ -44,7 +44,7 @@ export default function VendorModule() {
       setVendors(data.vendors || []);
       setTotal(data.total || 0);
     } catch (error) {
-      toast.error(error.response?.data?.message || "Error fetching vendors");
+      toast.error(error.response?.data?.message || "Error fetching suppliers");
     }
   };
 
@@ -58,17 +58,17 @@ export default function VendorModule() {
 
   const handleSubmit = async () => {
     if (!form.name || !form.mobile) {
-      toast.error("Vendor name and mobile are required");
+      toast.error("Supplier name and mobile are required");
       return;
     }
 
     try {
       if (editId) {
         await updateVendor(editId, form);
-        toast.success("Vendor updated successfully");
+        toast.success("Supplier updated successfully");
       } else {
         await createVendor(form);
-        toast.success("Vendor added successfully");
+        toast.success("Supplier added successfully");
       }
 
       setForm(emptyForm);
@@ -85,10 +85,10 @@ export default function VendorModule() {
   };
 
   const handleDeleteVendor = async (id) => {
-    if (window.confirm("Delete this vendor?")) {
+    if (window.confirm("Delete this supplier?")) {
       try {
         await deleteVendor(id);
-        toast.success("Vendor deleted successfully");
+        toast.success("Supplier deleted successfully");
         fetchVendors();
       } catch (error) {
         toast.error(error.response?.data?.message || "Delete failed");
