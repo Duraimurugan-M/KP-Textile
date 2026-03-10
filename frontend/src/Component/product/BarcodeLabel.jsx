@@ -58,19 +58,18 @@ const printBarcode = async () => {
         sx={{
           width: "50mm",
           height: "25mm",
-          border: "1px solid #000",
           padding: "2px",
           textAlign: "center",
           background: "#fff",
         }}
       >
         <Typography fontSize={8} fontWeight="bold">
-          KP Textile
+          YUVIRAA SILKS
         </Typography>
 
         <Typography fontSize={7}>{product.name}</Typography>
 
-        <Typography fontSize={7}>MRP ₹{product.price}</Typography>
+        <Typography fontSize={10} fontWeight="bold">MRP ₹{product.price}</Typography>
 
         <Barcode
           value={product.productCode}

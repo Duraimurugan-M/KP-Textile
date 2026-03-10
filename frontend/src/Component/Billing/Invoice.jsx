@@ -30,11 +30,11 @@ const isSameMonth = (left, right) =>
   left.getFullYear() === right.getFullYear() &&
   left.getMonth() === right.getMonth();
 
-const buildInvoiceNo = (date, serial) => {
+const buildInvoiceNo = (date, serial, withPrefix = true) => {
   const yy = pad(date.getFullYear() % 100, 2);
   const mm = pad(date.getMonth() + 1, 2);
   const seq = pad(serial, 3);
-  return `${SHOP.code}${yy}${mm}${seq}`;
+  return withPrefix ? `${SHOP.code}${yy}${mm}${seq}` : `${yy}${mm}${seq}`;
 };
 
 const ONES = [
@@ -193,8 +193,14 @@ export default function Invoice() {
     const igstTotal = lineItems.reduce((s, i) => s + i.igstAmount, 0);
     const taxTotal = cgstTotal + sgstTotal + igstTotal;
 
+    // Keep separate monthly serial sequences for GST and non-GST bills.
     const monthSales = allSales
-      .filter((s) => s?.createdAt && isSameMonth(new Date(s.createdAt), saleDate))
+      .filter(
+        (s) =>
+          s?.createdAt &&
+          isSameMonth(new Date(s.createdAt), saleDate) &&
+          (s.gstMode === "without") === nonGst,
+      )
       .sort((a, b) => {
         const ta = new Date(a.createdAt).getTime();
         const tb = new Date(b.createdAt).getTime();
@@ -204,7 +210,7 @@ export default function Invoice() {
 
     const sameSaleIdx = monthSales.findIndex((s) => String(s._id) === String(sale._id));
     const serial = sameSaleIdx >= 0 ? sameSaleIdx + 1 : 1;
-    const invoiceNo = buildInvoiceNo(saleDate, serial);
+    const invoiceNo = buildInvoiceNo(saleDate, serial, !nonGst);
     const amountInWords = `${numberToWordsIndian(Math.round(grandTotal))} Rupees Only`;
 
     return {

@@ -283,17 +283,54 @@ export const uploadProductsFromExcel = async (req, res) => {
       });
     }
 
-const formatted = data.map((row) => ({
-  name: row["Product Name"],
-  category: row["Category"],
-  fabric: row["Fabric"],
-  color: row["Color"],
-  price: Number(row["Price"]),
-  productCode: row["Product Code"],
-  hsnCode: row["HSN Code"],
-  description: row["Description"] || "",
-  stock: Number(row["Opening Stock"]),
-}));
+    const formatted = data.map((row) => ({
+      name: row["Product Name"],
+      category: row["Category"],
+      fabric: row["Fabric"],
+      color: row["Color"],
+      price: Number(row["Price"]),
+      productCode: String(row["Product Code"] || "").trim(),
+      hsnCode: row["HSN Code"],
+      description: row["Description"] || "",
+      stock: Number(row["Opening Stock"]),
+    }));
+
+    // Validate required fields and duplicate product codes inside the same file.
+    const codeSet = new Set();
+    for (let i = 0; i < formatted.length; i += 1) {
+      const row = formatted[i];
+      const rowNo = i + 2; // +1 for 0-index and +1 for excel header row
+
+      if (!row.name || !row.productCode || !row.hsnCode || !row.category || Number.isNaN(row.price)) {
+        return res.status(400).json({
+          success: false,
+          msg: `Row ${rowNo}: Missing required product fields`,
+        });
+      }
+
+      const codeKey = row.productCode.toLowerCase();
+      if (codeSet.has(codeKey)) {
+        return res.status(400).json({
+          success: false,
+          msg: `Product code already exists in upload file: ${row.productCode}`,
+        });
+      }
+      codeSet.add(codeKey);
+    }
+
+    // Validate against existing DB product codes before insertMany.
+    const uploadCodes = formatted.map((p) => p.productCode);
+    const existingProducts = await Product.find(
+      { productCode: { $in: uploadCodes } },
+      { productCode: 1, _id: 0 }
+    );
+
+    if (existingProducts.length > 0) {
+      return res.status(400).json({
+        success: false,
+        msg: `Product code already exists: ${existingProducts[0].productCode}`,
+      });
+    }
 
     const inserted = await Product.insertMany(formatted);
 
@@ -301,6 +338,7 @@ const formatted = data.map((row) => ({
       success: true,
       count: inserted.length,
       products: inserted,
+      message: "Excel uploaded successfully",
     });
 
   } catch (error) {

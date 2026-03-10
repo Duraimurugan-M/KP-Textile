@@ -206,6 +206,7 @@ export default function ProductPage() {
     } catch (error) {
       const message =
         error.response?.data?.message ||
+        error.response?.data?.msg ||
         "Upload failed";
 
       toast.error(message);
@@ -240,7 +241,7 @@ export default function ProductPage() {
       for (let i = 0; i < copies; i++) {
         html += `
         <div class="label">
-          <div class="shop">KP Textile</div>
+          <div class="shop">YUVIRAA SILKS</div>
           <div class="barcode">
             ${barcodeSVG}
           </div>
@@ -267,13 +268,14 @@ export default function ProductPage() {
       display:grid;
       grid-template-columns:50mm 50mm;
       grid-auto-rows:25mm;
+      column-gap:2mm;
+      row-gap:2mm;
       font-family:Arial, Helvetica, sans-serif;
     }
 
     .label{
       width:50mm;
       height:25mm;
-      border:1px solid black;
       box-sizing:border-box;
       padding:1.5mm;
       display:flex;
@@ -318,6 +320,7 @@ export default function ProductPage() {
 
     .price{
       font-weight:bold;
+      font-size:12px;
     }
     </style>
     </head>
