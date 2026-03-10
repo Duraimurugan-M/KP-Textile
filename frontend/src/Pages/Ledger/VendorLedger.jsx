@@ -45,7 +45,7 @@ export default function VendorLedger() {
   const [toDate, setToDate] = useState("");
   const [selectedVendor, setSelectedVendor] = useState("");
   const [page, setPage] = useState(1);
-  const [limit] = useState(10);
+  const [limit, setLimit] = useState(10);
 
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
@@ -142,6 +142,7 @@ export default function VendorLedger() {
     () => paginateRows(sortedRows, page, limit),
     [sortedRows, page, limit]
   );
+  const totalPages = Math.max(1, Math.ceil(sortedRows.length / limit));
 
   const vendorSummary = useMemo(() => {
     const map = {};
@@ -427,11 +428,28 @@ export default function VendorLedger() {
               </Table>
             </TableContainer>
 
-            <Stack direction="row" spacing={2} justifyContent="flex-end" mt={2}>
+            <Stack direction="row" spacing={2} justifyContent="flex-end" alignItems="center" mt={2}>
+              <TextField
+                select
+                size="small"
+                label="Rows"
+                value={limit}
+                onChange={(e) => {
+                  setPage(1);
+                  setLimit(Number(e.target.value));
+                }}
+                SelectProps={{ native: true }}
+                sx={{ width: 100 }}
+              >
+                <option value={10}>10</option>
+                <option value={50}>50</option>
+                <option value={75}>75</option>
+                <option value={100}>100</option>
+              </TextField>
               <Button disabled={page === 1} onClick={() => setPage(page - 1)}>
                 Prev
               </Button>
-              <Typography>Page {page}</Typography>
+              <Typography>Page {page} of {totalPages}</Typography>
               <Button
                 disabled={page * limit >= sortedRows.length}
                 onClick={() => setPage(page + 1)}

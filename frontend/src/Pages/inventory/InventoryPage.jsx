@@ -13,14 +13,14 @@ export default function InventoryPage() {
   const [stockSearch, setStockSearch] = useState("");
   const [stockSort, setStockSort] = useState("");
   const [stockPage, setStockPage] = useState(1);
-  const stockLimit = 10;
+  const [stockLimit, setStockLimit] = useState(10);
 
   const [movementSearch, setMovementSearch] = useState("");
   const [movementSort, setMovementSort] = useState("");
   const [movementFromDate, setMovementFromDate] = useState("");
   const [movementToDate, setMovementToDate] = useState("");
   const [movementPage, setMovementPage] = useState(1);
-  const movementLimit = 10;
+  const [movementLimit, setMovementLimit] = useState(10);
 
   useEffect(() => {
     const fetchInventoryData = async () => {
@@ -98,7 +98,7 @@ export default function InventoryPage() {
   const paginatedProducts = useMemo(() => {
     const start = (stockPage - 1) * stockLimit;
     return filteredProducts.slice(start, start + stockLimit);
-  }, [filteredProducts, stockPage]);
+  }, [filteredProducts, stockPage, stockLimit]);
 
   useEffect(() => {
     setStockPage(1);
@@ -129,6 +129,7 @@ export default function InventoryPage() {
           page={stockPage}
           setPage={setStockPage}
           limit={stockLimit}
+          setLimit={setStockLimit}
           total={filteredProducts.length}
         />
       </Paper>
@@ -148,6 +149,7 @@ export default function InventoryPage() {
         page={movementPage}
         setPage={setMovementPage}
         limit={movementLimit}
+        setLimit={setMovementLimit}
       />
     </Container>
   );

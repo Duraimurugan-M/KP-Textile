@@ -28,7 +28,7 @@ export default function CustomerModule() {
 
   // ✅ Query states (same as vendor)
   const [page, setPage] = useState(1);
-  const [limit] = useState(10);
+  const [limit, setLimit] = useState(10);
   const [search, setSearch] = useState("");
   const [sort, setSort] = useState("");
   const [total, setTotal] = useState(0);
@@ -51,7 +51,7 @@ export default function CustomerModule() {
 
   useEffect(() => {
     fetchCustomers();
-  }, [page, search, sort]);
+  }, [page, limit, search, sort]);
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -121,6 +121,7 @@ export default function CustomerModule() {
         page={page}
         setPage={setPage}
         limit={limit}
+        setLimit={setLimit}
         total={total}
         onEdit={handleEdit}
         onDelete={handleDelete}

@@ -22,8 +22,11 @@ export default function InventoryTable({
   page = 1,
   setPage,
   limit = 10,
+  setLimit,
   total = 0,
 }) {
+  const totalPages = Math.max(1, Math.ceil(total / limit));
+
   const stockStatus = (stock) => {
     const currentStock = Number(stock || 0);
     if (currentStock === 0) return <Chip label="Out" color="error" />;
@@ -82,6 +85,7 @@ export default function InventoryTable({
         <Table size="small">
           <TableHead>
             <TableRow>
+              <TableCell>#</TableCell>
               <TableCell>Name</TableCell>
               <TableCell>Product Code</TableCell>
               <TableCell>Category</TableCell>
@@ -94,14 +98,15 @@ export default function InventoryTable({
           <TableBody>
             {products.length === 0 && (
               <TableRow>
-                <TableCell colSpan={6} align="center">
+                <TableCell colSpan={7} align="center">
                   No products found
                 </TableCell>
               </TableRow>
             )}
 
-            {products.map((p) => (
+            {products.map((p, index) => (
               <TableRow key={p._id || p.id}>
+                <TableCell>{(page - 1) * limit + index + 1}</TableCell>
                 <TableCell>{p.name}</TableCell>
                 <TableCell>{p.productCode || "-"}</TableCell>
                 <TableCell>{p.category}</TableCell>
@@ -114,12 +119,30 @@ export default function InventoryTable({
         </Table>
       </TableContainer>
 
-      <Stack direction="row" spacing={2} justifyContent="flex-end" mt={2}>
+      <Stack direction="row" spacing={2} justifyContent="flex-end" alignItems="center" mt={2}>
+        <TextField
+          select
+          size="small"
+          label="Rows"
+          value={limit}
+          onChange={(e) => {
+            setPage(1);
+            setLimit?.(Number(e.target.value));
+          }}
+          SelectProps={{ native: true }}
+          sx={{ width: 100 }}
+        >
+          <option value={10}>10</option>
+          <option value={50}>50</option>
+          <option value={75}>75</option>
+          <option value={100}>100</option>
+        </TextField>
+
         <Button disabled={page === 1} onClick={() => setPage(page - 1)}>
           Prev
         </Button>
 
-        <Typography>Page {page}</Typography>
+        <Typography>Page {page} of {totalPages}</Typography>
 
         <Button
           disabled={page * limit >= total}

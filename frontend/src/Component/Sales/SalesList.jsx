@@ -23,12 +23,14 @@ export default function SalesList({
   page,
   setPage,
   limit,
+  setLimit,
   total,
   billMode,
   setBillMode,
   onOpenInvoice,
 }) {
   const navigate = useNavigate();
+  const totalPages = Math.max(1, Math.ceil(total / limit));
 
   const formatDate = (date) => {
     const d = new Date(date);
@@ -193,8 +195,27 @@ export default function SalesList({
         direction="row"
         spacing={2}
         justifyContent="flex-end"
+        alignItems="center"
         mt={2}
       >
+        <TextField
+          select
+          size="small"
+          label="Rows"
+          value={limit}
+          onChange={(e) => {
+            setPage(1);
+            setLimit?.(Number(e.target.value));
+          }}
+          SelectProps={{ native: true }}
+          sx={{ width: 100 }}
+        >
+          <option value={10}>10</option>
+          <option value={50}>50</option>
+          <option value={75}>75</option>
+          <option value={100}>100</option>
+        </TextField>
+
         <Button
           disabled={page === 1}
           onClick={() => setPage(page - 1)}
@@ -203,7 +224,7 @@ export default function SalesList({
         </Button>
 
         <Typography>
-          Page {page}
+          Page {page} of {totalPages}
         </Typography>
 
         <Button

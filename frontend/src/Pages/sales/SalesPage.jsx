@@ -16,7 +16,7 @@ export default function SalesModule() {
   const [search, setSearch] = useState("");
   const [sort, setSort] = useState("");
   const [page, setPage] = useState(1);
-  const [limit] = useState(10);
+  const [limit, setLimit] = useState(10);
 
   const fetchData = async () => {
     try {
@@ -143,6 +143,7 @@ export default function SalesModule() {
           page={page}
           setPage={setPage}
           limit={limit}
+          setLimit={setLimit}
           total={total}
           billMode={billMode}
           setBillMode={setBillMode}
