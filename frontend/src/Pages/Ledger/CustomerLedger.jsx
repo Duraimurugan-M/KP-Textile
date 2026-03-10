@@ -391,7 +391,7 @@ export default function CustomerLedger() {
               >
                 <TableHead>
                   <TableRow>
-                    <TableCell align="center" sx={{ width: 40 }}>
+                    <TableCell align="center" sx={{ width: 44 }}>
                       <Checkbox
                         checked={showOtherParticulars}
                         onChange={(e) => {
@@ -401,9 +401,6 @@ export default function CustomerLedger() {
                         inputProps={{ "aria-label": "toggle particular filter" }}
                         size="small"
                       />
-                    </TableCell>
-                    <TableCell align="center" sx={{ width: 40 }}>
-                      #
                     </TableCell>
                     <TableCell sx={{ width: 180, whiteSpace: "nowrap" }}>Date</TableCell>
                     <TableCell sx={{ width: 120, whiteSpace: "nowrap" }}>Customer</TableCell>
@@ -431,7 +428,7 @@ export default function CustomerLedger() {
                 <TableBody>
                   {pagedRows.length === 0 && (
                     <TableRow>
-                      <TableCell colSpan={12} align="center">
+                      <TableCell colSpan={11} align="center">
                         No ledger records found
                       </TableCell>
                     </TableRow>
@@ -439,8 +436,7 @@ export default function CustomerLedger() {
 
                   {pagedRows.map((row, index) => (
                     <TableRow key={row.id}>
-                      <TableCell />
-                      <TableCell align="center">{(page - 1) * limit + index + 1}</TableCell>
+                      <TableCell align="center">#{(page - 1) * limit + index + 1}</TableCell>
                       <TableCell sx={{ whiteSpace: "nowrap" }}>{row.date}</TableCell>
                       <TableCell sx={{ whiteSpace: "nowrap" }}>{row.customer}</TableCell>
                       <TableCell>{row.products}</TableCell>

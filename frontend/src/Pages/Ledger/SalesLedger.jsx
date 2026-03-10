@@ -369,7 +369,6 @@ export default function SalesLedger() {
                         size="small"
                       />
                     </TableCell>
-                    <TableCell align="center">#</TableCell>
                     <TableCell align="center">Date</TableCell>
                     <TableCell>Customer</TableCell>
                     <TableCell>Products</TableCell>
@@ -383,7 +382,7 @@ export default function SalesLedger() {
                 <TableBody>
                   {pagedRows.length === 0 && (
                     <TableRow>
-                      <TableCell colSpan={9} align="center">
+                      <TableCell colSpan={8} align="center">
                         No sales records found
                       </TableCell>
                     </TableRow>
@@ -391,8 +390,7 @@ export default function SalesLedger() {
 
                   {pagedRows.map((row, index) => (
                     <TableRow key={row.id}>
-                      <TableCell />
-                      <TableCell align="center">{(page - 1) * limit + index + 1}</TableCell>
+                      <TableCell align="center">#{(page - 1) * limit + index + 1}</TableCell>
                       <TableCell align="center">{row.date}</TableCell>
                       <TableCell>{row.customer}</TableCell>
                       <TableCell>{row.products}</TableCell>
