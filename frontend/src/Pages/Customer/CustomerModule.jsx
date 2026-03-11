@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Stack } from "@mui/material";
+import { Stack, Typography } from "@mui/material";
 import { toast } from "react-toastify";
 
 import CustomerForm from "../../Component/Customer/CustomerForm";
@@ -103,7 +103,11 @@ export default function CustomerModule() {
   };
 
   return (
-    <Stack spacing={3}>
+    <Stack spacing={3} sx={{ width: "100%", mt: 4 }}>
+      <Typography variant="h4">
+        Customer Management
+      </Typography>
+
       <CustomerForm
         form={form}
         onChange={handleChange}

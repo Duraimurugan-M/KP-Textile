@@ -279,7 +279,7 @@ export default function Sidebar() {
 
       setTimeout(() => {
         navigate("/login");
-      }, 500);
+      }, 200);
     } catch (error) {
       toast.error("Logout failed");
     }

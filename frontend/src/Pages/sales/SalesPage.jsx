@@ -121,9 +121,9 @@ export default function SalesModule() {
   }, [search, sort]);
 
   return (
-    <Box sx={{ width: "100%", mt: 2 }}>
+    <Box sx={{ width: "100%", mt: 4 }}>
       <Typography variant="h4" mb={3}>
-        Sales
+        Sales Management
       </Typography>
 
       <Stack spacing={3} sx={{ width: "100%" }}>

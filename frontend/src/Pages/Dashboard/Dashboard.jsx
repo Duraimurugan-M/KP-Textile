@@ -144,9 +144,25 @@ export default function DashboardLedger() {
           { label: "Suppliers", value: vendorsCount, color: "#f57c00" },
         ].map((c, i) => (
           <Grid key={i} size={{ xs: 12, sm: 6, lg: 3 }}>
-            <Paper sx={{ p: 3, height: "100%" }}>
-              <Typography variant="body2">{c.label}</Typography>
-              <Typography variant="h5" fontWeight="bold" sx={{ color: c.color }}>
+            <Paper
+              elevation={0}
+              sx={{
+                p: 3,
+                height: "100%",
+                minHeight: 124,
+                borderRadius: 3,
+                border: "1px solid",
+                borderColor: "divider",
+                boxShadow: "0 8px 24px rgba(15, 23, 42, 0.06)",
+                display: "flex",
+                flexDirection: "column",
+                justifyContent: "center",
+              }}
+            >
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                {c.label}
+              </Typography>
+              <Typography variant="h5" fontWeight="bold" sx={{ color: c.color, lineHeight: 1.2 }}>
                 {c.label === "Customers" || c.label === "Suppliers"
                   ? c.value
                   : `${"\u20B9"}${typeof c.value === "number" ? c.value.toFixed(2) : c.value}`}
@@ -157,34 +173,40 @@ export default function DashboardLedger() {
       </Grid>
 
       {/* MONTHLY CHARTS */}
-      <Grid container spacing={3} sx={{ mb: 3, width: "100%", m: 0 }} alignItems="stretch">
+      <Grid
+        container
+        rowSpacing={3}
+        columnSpacing={3}
+        sx={{ mb: 4, mt: 1, width: "100%" }}
+        alignItems="stretch"
+      >
         <Grid size={{ xs: 12, lg: 6 }}>
-          <Paper sx={{ p: 3, height: 360, display: "flex", flexDirection: "column" }}>
-            <Typography variant="h6">Monthly Sales</Typography>
-            <Box sx={{ flex: 1, minHeight: 0 }}>
+          <Paper sx={{ p: 3, height: 380, display: "flex", flexDirection: "column", overflow: "hidden" }}>
+            <Typography variant="h6" sx={{ mb: 1 }}>Monthly Sales</Typography>
+            <Box sx={{ flex: 1, minHeight: 290 }}>
               <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={monthlySales}>
-                <XAxis dataKey="month" />
-                <YAxis />
-                <Tooltip />
-                <Area dataKey="amount" stroke="#1976d2" fill="#bbdefb" />
-              </AreaChart>
+                <AreaChart data={monthlySales} margin={{ top: 12, right: 20, left: 12, bottom: 10 }}>
+                  <XAxis dataKey="month" />
+                  <YAxis width={70} />
+                  <Tooltip />
+                  <Area dataKey="amount" stroke="#1976d2" fill="#bbdefb" />
+                </AreaChart>
               </ResponsiveContainer>
             </Box>
           </Paper>
         </Grid>
 
         <Grid size={{ xs: 12, lg: 6 }}>
-          <Paper sx={{ p: 3, height: 360, display: "flex", flexDirection: "column" }}>
-            <Typography variant="h6">Monthly Purchase</Typography>
-            <Box sx={{ flex: 1, minHeight: 0 }}>
+          <Paper sx={{ p: 3, height: 380, display: "flex", flexDirection: "column", overflow: "hidden" }}>
+            <Typography variant="h6" sx={{ mb: 1 }}>Monthly Purchase</Typography>
+            <Box sx={{ flex: 1, minHeight: 290 }}>
               <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={monthlyPurchase}>
-                <XAxis dataKey="month" />
-                <YAxis />
-                <Tooltip />
-                <Area dataKey="amount" stroke="#d32f2f" fill="#ffcdd2" />
-              </AreaChart>
+                <AreaChart data={monthlyPurchase} margin={{ top: 12, right: 20, left: 12, bottom: 10 }}>
+                  <XAxis dataKey="month" />
+                  <YAxis width={70} />
+                  <Tooltip />
+                  <Area dataKey="amount" stroke="#d32f2f" fill="#ffcdd2" />
+                </AreaChart>
               </ResponsiveContainer>
             </Box>
           </Paper>
@@ -192,50 +214,60 @@ export default function DashboardLedger() {
       </Grid>
 
       {/* PIE CHARTS */}
-      <Grid container spacing={3} sx={{ mb: 3, width: "100%", m: 0 }} alignItems="stretch">
+      <Grid
+        container
+        rowSpacing={3}
+        columnSpacing={3}
+        sx={{ mb: 3, mt: 0.5, width: "100%" }}
+        alignItems="stretch"
+      >
         <Grid size={{ xs: 12, lg: 6 }}>
-          <Paper sx={{ p: 3, height: 360, display: "flex", flexDirection: "column" }}>
-            <Typography variant="h6">Customer-wise Sales</Typography>
-            <Box sx={{ flex: 1, minHeight: 0 }}>
+          <Paper sx={{ p: 3, height: 380, display: "flex", flexDirection: "column", overflow: "hidden" }}>
+            <Typography variant="h6" sx={{ mb: 1 }}>Customer-wise Sales</Typography>
+            <Box sx={{ flex: 1, minHeight: 290 }}>
               <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={customerSales}
-                  dataKey="value"
-                  nameKey="name"
-                  outerRadius={isMobile ? 90 : 120}
-                  label={!isMobile}
-                >
-                  {customerSales.map((_, i) => (
-                    <Cell key={i} fill={CUSTOMER_COLORS[i % CUSTOMER_COLORS.length]} />
-                  ))}
-                </Pie>
-                <Tooltip />
-              </PieChart>
+                <PieChart>
+                  <Pie
+                    data={customerSales}
+                    dataKey="value"
+                    nameKey="name"
+                    cx="50%"
+                    cy="54%"
+                    outerRadius={isMobile ? 82 : 104}
+                    label={!isMobile}
+                  >
+                    {customerSales.map((_, i) => (
+                      <Cell key={i} fill={CUSTOMER_COLORS[i % CUSTOMER_COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip />
+                </PieChart>
               </ResponsiveContainer>
             </Box>
           </Paper>
         </Grid>
 
         <Grid size={{ xs: 12, lg: 6 }}>
-          <Paper sx={{ p: 3, height: 360, display: "flex", flexDirection: "column" }}>
-            <Typography variant="h6">Supplier-wise Purchase</Typography>
-            <Box sx={{ flex: 1, minHeight: 0 }}>
+          <Paper sx={{ p: 3, height: 380, display: "flex", flexDirection: "column", overflow: "hidden" }}>
+            <Typography variant="h6" sx={{ mb: 1 }}>Supplier-wise Purchase</Typography>
+            <Box sx={{ flex: 1, minHeight: 290 }}>
               <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={vendorPurchase}
-                  dataKey="value"
-                  nameKey="name"
-                  outerRadius={isMobile ? 90 : 120}
-                  label={!isMobile}
-                >
-                  {vendorPurchase.map((_, i) => (
-                    <Cell key={i} fill={SUPPLIER_COLORS[i % SUPPLIER_COLORS.length]} />
-                  ))}
-                </Pie>
-                <Tooltip />
-              </PieChart>
+                <PieChart>
+                  <Pie
+                    data={vendorPurchase}
+                    dataKey="value"
+                    nameKey="name"
+                    cx="50%"
+                    cy="54%"
+                    outerRadius={isMobile ? 82 : 104}
+                    label={!isMobile}
+                  >
+                    {vendorPurchase.map((_, i) => (
+                      <Cell key={i} fill={SUPPLIER_COLORS[i % SUPPLIER_COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip />
+                </PieChart>
               </ResponsiveContainer>
             </Box>
           </Paper>
@@ -243,7 +275,13 @@ export default function DashboardLedger() {
       </Grid>
 
       {/* TABLES */}
-      <Grid container spacing={3} sx={{ width: "100%", m: 0 }} alignItems="stretch">
+      <Grid
+        container
+        rowSpacing={3}
+        columnSpacing={3}
+        sx={{ width: "100%", mt: 0.5 }}
+        alignItems="stretch"
+      >
         <Grid size={{ xs: 12, lg: 6 }}>
           <Paper sx={{ p: 3, height: "100%" }}>
             <Typography variant="h6" mb={2}>

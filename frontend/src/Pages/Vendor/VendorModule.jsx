@@ -102,7 +102,11 @@ export default function VendorModule() {
   };
 
   return (
-    <Stack spacing={3}>
+    <Stack spacing={3} sx={{ width: "100%", mt: 4 }}>
+      <Typography variant="h4">
+        Supplier Management
+      </Typography>
+
       <VendorForm
         form={form}
         onChange={handleChange}

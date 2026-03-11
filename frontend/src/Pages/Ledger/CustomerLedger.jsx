@@ -206,6 +206,14 @@ export default function CustomerLedger() {
 
   return (
     <Box sx={{ width: "100%", p: { xs: 2, md: 3 } }}>
+      <Typography
+        variant="h4"
+        fontWeight="bold"
+        sx={{ textAlign: { xs: "center", md: "left" }, mb: 3 }}
+      >
+        Customer Ledger
+      </Typography>
+
       <Grid container spacing={3} sx={{ width: "100%", m: 0 }} alignItems="stretch">
         {topCustomer && (
           <Grid size={{ xs: 12 }}>
@@ -430,7 +438,7 @@ export default function CustomerLedger() {
                     <TableCell align="center" sx={{ width: 90 }}>
                       Total Qty
                     </TableCell>
-                    <TableCell sx={{ width: 120, whiteSpace: "nowrap" }}>Particular</TableCell>
+                    <TableCell sx={{ width: 120, whiteSpace: "nowrap" }}>Invoice No</TableCell>
                     <TableCell align="right" sx={{ width: 90, whiteSpace: "nowrap" }}>
                       Discount %
                     </TableCell>

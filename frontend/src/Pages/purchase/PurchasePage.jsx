@@ -255,8 +255,8 @@ export default function PurchasePage() {
   }, [search, sort]);
 
   return (
-    <Box sx={{ width: "100%", mt: 2 }}>
-      <Typography variant="h4">Purchase Module</Typography>
+    <Box maxWidth={true} sx={{ mt: 4 }}>
+      <Typography variant="h4">Purchase Management</Typography>
 
       <Paper
         sx={{

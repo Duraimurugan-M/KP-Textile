@@ -113,7 +113,7 @@ export default function InventoryPage() {
   return (
     <Container sx={{ mt: 4 }}>
       <Typography variant="h4">
-        Inventory
+        Inventory Management
       </Typography>
 
       <InventorySummary

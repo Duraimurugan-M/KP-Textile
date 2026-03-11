@@ -187,6 +187,14 @@ export default function VendorLedger() {
 
   return (
     <Box sx={{ width: "100%", p: { xs: 2, md: 3 } }}>
+      <Typography
+        variant="h4"
+        fontWeight="bold"
+        sx={{ textAlign: { xs: "center", md: "left" }, mb: 3 }}
+      >
+        Supplier Ledger
+      </Typography>
+
       <Grid container spacing={3} sx={{ width: "100%", m: 0 }} alignItems="stretch">
         {topVendor && (
           <Grid size={{ xs: 12 }}>
