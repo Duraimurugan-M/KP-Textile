@@ -8,7 +8,7 @@ const SHOP = {
   name: "YUVIRAA SILKS",
   gstin: "33HBCPB7699A1ZR",
   phones: ["88380 57339", "95433 82043"],
-  email: "yviraa339@gmail.com",
+  email: "yvviraa339@gmail.com",
   address1: "6/541, Gandhi Nagar, Near Jay Matriculation School,",
   address2: "Allikuttai (PO), Salem - 636 003. (TN)",
   tagline: "Handloom Cloth Merchants",
@@ -367,8 +367,8 @@ export default function Invoice() {
                 <div className="font-bold">{view.customer.name}</div>
                 <div>Mobile No: {view.customer.mobile}</div>
                 {!view.nonGst && <div>GSTIN / UIN: {view.customer.gst}</div>}
-                <div>State Name * Code: {view.customer.state}</div>
-                <div>{view.customer.address}</div>
+                <div>Address: {view.customer.address}</div>
+                <div>State: {view.customer.state}</div>
               </div>
               <div className="p-2">
                 <div className="italic">Buyer</div>
